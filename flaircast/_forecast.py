@@ -527,6 +527,21 @@ def _phase_noise_sample(
         else _EPS_BOXCOX
     )
     R = E[:, -K_r:] / np.maximum(fitted_recent, fitted_clamp)
+    # Adaptive per-phase bias shrinkage.  The Shape is computed from the
+    # last ``_SHAPE_K = 2`` periods, so ``R[p, :]`` may carry a per-phase
+    # offset when older periods drift.  We remove the *noise* part of
+    # that offset using a James–Stein-style shrinkage: each phase mean
+    # is multiplied by ``se² / (mean² + se²)``, i.e. the posterior mean
+    # of a zero-centered Gaussian prior.  Phases whose sample mean
+    # dominates their standard error are treated as signal and kept;
+    # phases whose mean is of the same order as the standard error are
+    # treated as sampling noise and pulled toward zero.
+    if K_r >= 4:
+        phase_mean = R.mean(axis=1, keepdims=True)
+        phase_var = R.var(axis=1, ddof=1, keepdims=True)
+        se_sq = phase_var / K_r
+        noise_fraction = se_sq / (phase_mean**2 + se_sq + _EPS)
+        R = R - phase_mean * noise_fraction
 
     step_idx = np.arange(horizon) // P
     phase_idx = np.arange(horizon) % P
