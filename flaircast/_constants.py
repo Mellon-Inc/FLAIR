@@ -47,6 +47,13 @@ _SHAPE_K = 2
 # Number of recent periods used for the phase-noise residual matrix.
 _PHASE_NOISE_K = 50
 
+# Level noise model: ``"bootstrap"`` (empirical LOOCV residual resampling,
+# default) or ``"t"`` (parametric Student-t with ``ν = n_train − p``).
+# Bootstrap preserves the empirical skew/kurtosis of the one-step-ahead
+# predictive distribution; Student-t is kept for very short series where
+# the LOOCV residual pool is too small (``n_loo < 4``) to bootstrap.
+_LEVEL_NOISE_MODE = "bootstrap"
+
 # Ridge LOOCV soft-average grid (log-spaced alphas).
 _N_ALPHAS = 25
 _ALPHA_LOG_MIN = -4  # log10 of minimum Ridge alpha
