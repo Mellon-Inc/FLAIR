@@ -42,7 +42,7 @@ from ._constants import (
     _MIN_COMPLETE,
     _PHASE_NOISE_K,
 )
-from ._level import _bc, _bc_inv, _bc_lambda, _estimate_phi, _rank1_svd_summary, _ridge_sa
+from ._level import _bc, _bc_inv, _bc_lambda, _estimate_phi, _ridge_sa
 from ._period import _select_period
 from ._shape import _compute_cross_periods, _compute_shape2, _estimate_shape
 
@@ -711,6 +711,25 @@ def forecast(
         if n_complete < _MIN_COMPLETE:
             return _degenerate_p1_fallback(y, horizon, n_samples, n, y_shift, rng)
 
+    # 3a. Dynamic Ridge DoF guard.  The Level Ridge LOOCV is stable when
+    #     max leverage ``h_ii ≤ 0.5``, which requires ``n_train ≥ 2p``
+    #     where ``p`` is the number of Ridge features (intercept + trend +
+    #     lag-1 + optional cross-period lag).  When the period-folded
+    #     matrix has fewer complete periods, the LOOCV residuals are
+    #     dominated by leverage and the predictive intervals blow up.
+    #     We compute the feature count from the already-known secondary
+    #     period list and fall back to P=1 if the bound is not met.
+    if P > 1:
+        cross_periods_est, max_cp_est = _compute_cross_periods(
+            secondary, P, period, n_complete
+        )
+        start_est = max(1, max_cp_est) if max_cp_est >= 2 else 1
+        nf_est = 2 + 1 + (1 if max_cp_est >= 2 else 0)
+        if n_complete - start_est < 2 * nf_est:
+            P = 1
+            secondary = []
+            n_complete = n
+
     # 4. Cap to MAX_COMPLETE periods (memory / runtime guard)
     if n_complete > _MAX_COMPLETE:
         y = y[-(_MAX_COMPLETE * P) :]
@@ -724,17 +743,6 @@ def forecast(
     y_trim = y[-usable:]
     mat = y_trim.reshape(n_complete, P).T
     L = mat.sum(axis=0)
-
-    # 5a. Single-pass rank-1 SVD summary: Gavish-Donoho 2014 optimal
-    #     shrinkage factor, Marchenko-Pastur median noise scale, and the
-    #     rank-1 magnitude.  All three are downstream inputs and share
-    #     one SVD.  ``L = 1ᵀmat`` is collinear with ``σ₁v₁``, so the
-    #     scalar factor shrinks the entire rank-1 reconstruction;
-    #     ``sigma_noise`` and ``rank1_mag`` feed the phase-noise
-    #     denominator (no ``0.1·median`` clamp; the floor is the MP
-    #     noise scale itself).
-    rank1_factor, _, _ = _rank1_svd_summary(mat)
-    L = L * rank1_factor
 
     # 6. Estimate Shape (Dirichlet-Multinomial EB) — also returns m = ⌈h/P⌉
     S_forecast, S_hist, m = _estimate_shape(mat, n_complete, P, secondary, L, horizon)
