@@ -172,10 +172,14 @@ def _optshrink_factor(svd_s: NDArray[np.floating], P: int, n_complete: int) -> f
     threshold = (1.0 + np.sqrt(beta)) * sigma_noise
     if sigma_1 <= threshold:
         return 1.0
-    inner = (sigma_1**2 - (1.0 + beta) * sigma_noise**2) ** 2 - 4.0 * beta * sigma_noise**4
-    if inner <= 0.0:
+    # Gavish-Donoho 2014 Corollary 1 / SIAM 2017 eq. 3.2:
+    #   σ* = (1/√2) · √(A + √(A² − 4βσ⁴))
+    A = sigma_1**2 - (1.0 + beta) * sigma_noise**2
+    disc = A**2 - 4.0 * beta * sigma_noise**4
+    if disc <= 0.0:
         return 1.0
-    return float(np.clip(np.sqrt(inner) / sigma_1**2, _EPS, 1.0))
+    sigma_star = np.sqrt(A + np.sqrt(disc)) / np.sqrt(2.0)
+    return float(np.clip(sigma_star / sigma_1, _EPS, 1.0))
 
 
 @lru_cache(maxsize=128)
@@ -209,62 +213,6 @@ def _mp_median(beta: float) -> float:
         return c - 0.5
 
     return float(brentq(cdf_minus_half, y_minus + _EPS, y_plus - _EPS, xtol=1e-8))
-
-
-def _rank1_svd_summary(
-    mat: NDArray[np.floating],
-) -> tuple[float, float, NDArray[np.floating]]:
-    """Single SVD pass that returns the three rank-1 quantities FLAIR uses.
-
-    Returns
-    -------
-    factor : float
-        Gavish-Donoho 2014 optimal Frobenius shrinkage factor in
-        ``(0, 1]`` (or ``1.0`` for degenerate spectra).  Multiplying
-        ``L`` by this factor yields the minimax-optimal rank-1
-        reconstruction under the spiked rectangular model.
-    sigma_noise : float
-        Marchenko-Pastur median-based noise scale ``σ_med / √μ_β``.
-        Used by the phase-noise sampler as the natural floor for the
-        rank-1 magnitude denominator (replaces the legacy
-        ``0.1 · median(|fitted|)`` clamp).
-    rank1 : ndarray, shape (P, n_c)
-        ``σ₁ u₁ v₁ᵀ`` — the rank-1 signal magnitude that defines the
-        scale-invariant phase-noise denominator.
-
-    All three quantities come from a single
-    ``np.linalg.svd(mat, full_matrices=False)`` call so the SVD is
-    computed exactly once per forecast.
-
-    Returns the safe defaults ``(1.0, _EPS, S_proxy_zero)`` when ``mat``
-    is degenerate (``min(P, n_c) < 2`` or ``σ₁ ≈ 0``); the call sites
-    use these unconditionally as multiplicative factors / floors.
-    """
-    P, nc = mat.shape
-    if min(P, nc) < 2:
-        return 1.0, _EPS_BOXCOX, np.zeros_like(mat)
-    s = np.linalg.svd(mat, compute_uv=False)
-    sigma_1 = float(s[0])
-    if sigma_1 < _EPS:
-        return 1.0, _EPS_BOXCOX, np.zeros_like(mat)
-    rank1 = np.zeros_like(mat)  # placeholder; unused after spectrum-norm revert
-    sigma_med = float(np.median(s))
-    if sigma_med < _EPS:
-        return 1.0, _EPS_BOXCOX, rank1
-    beta = min(P, nc) / max(P, nc)
-    mu_beta = _mp_median(round(beta, 4))
-    sigma_noise = sigma_med / np.sqrt(mu_beta)
-    # Gavish-Donoho 2014 Theorem 1: optimal Frobenius shrinker.
-    threshold = (1.0 + np.sqrt(beta)) * sigma_noise
-    if sigma_1 <= threshold:
-        return 1.0, sigma_noise, rank1  # subcritical fallback (BIC
-        # already guarantees rank-1 is present in the chosen P)
-    inner = (sigma_1**2 - (1.0 + beta) * sigma_noise**2) ** 2 - 4.0 * beta * sigma_noise**4
-    if inner <= 0.0:
-        return 1.0, sigma_noise, rank1
-    sigma_1_shrunk = float(np.sqrt(inner) / sigma_1)
-    factor = float(np.clip(sigma_1_shrunk / sigma_1, _EPS, 1.0))
-    return factor, sigma_noise, rank1
 
 
 # ── Damped trend (LSR1 boundary extrapolation) ─────────────────────────

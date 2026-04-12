@@ -48,12 +48,14 @@ def _select_period(
         candidates = [max(period, 1)] if n // max(period, 1) >= _MIN_COMPLETE else [1]
 
     best_svd_s = np.zeros(1)
+    nc_svd = 0  # n_complete that produced best_svd_s
     if len(candidates) == 1:
         P = candidates[0]
         nc = n // P
         if nc >= _MIN_COMPLETE and P >= 2:
             mat_c = y[-(nc * P) :].reshape(nc, P).T
             best_svd_s = svdvals(mat_c)
+            nc_svd = nc
     else:
         T_max = min(n, _MAX_COMPLETE * min(candidates))
         y_sel = y[-T_max:]
@@ -70,7 +72,8 @@ def _select_period(
             if bic < best_bic:
                 best_P, best_bic = p_cand, bic
                 best_svd_s = s
+                nc_svd = nc
         P = best_P
 
     secondary = [p for p in cal if p != P and p > P] if cal else []
-    return P, secondary, period, cal, best_svd_s
+    return P, secondary, period, cal, best_svd_s, nc_svd

@@ -540,7 +540,7 @@ def _phase_noise_sample(
         phase_mean = R.mean(axis=1, keepdims=True)
         phase_var = R.var(axis=1, ddof=1, keepdims=True)
         se_sq = phase_var / K_r
-        noise_fraction = se_sq / (phase_mean**2 + se_sq + _EPS)
+        noise_fraction = np.clip(se_sq / (phase_mean**2 + se_sq + _EPS), 0.0, 1.0)
         R = R - phase_mean * noise_fraction
 
     step_idx = np.arange(horizon) // P
@@ -701,7 +701,7 @@ def forecast(
     n = len(y)
 
     # 3. MDL period selection (with fallback to P=1 / Gaussian for very short series)
-    P, secondary, period, _cal, svd_s = _select_period(y, n, freq)
+    P, secondary, period, _cal, svd_s, nc_svd = _select_period(y, n, freq)
     n_complete = n // P
     if n_complete < _MIN_COMPLETE:
         if P > 1:
@@ -724,7 +724,7 @@ def forecast(
             secondary, P, period, n_complete
         )
         start_est = max(1, max_cp_est) if max_cp_est >= 2 else 1
-        nf_est = 2 + 1 + (1 if max_cp_est >= 2 else 0)
+        nf_est = 2 + 1 + (1 if max_cp_est >= 2 else 0) + n_exog
         if n_complete - start_est < 2 * nf_est:
             P = 1
             secondary = []
@@ -748,7 +748,7 @@ def forecast(
     #     singular value, reusing the SVD that BIC period selection
     #     already computed ("One SVD" principle).  L is collinear with
     #     σ₁v₁, so the scalar shrinkage factor applies directly.
-    L = L * _optshrink_factor(svd_s, P, n_complete)
+    L = L * _optshrink_factor(svd_s, P, nc_svd if nc_svd > 0 else n_complete)
 
     # 6. Estimate Shape (Dirichlet-Multinomial EB) — also returns m = ⌈h/P⌉
     S_forecast, S_hist, m = _estimate_shape(mat, n_complete, P, secondary, L, horizon)
