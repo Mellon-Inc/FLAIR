@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import numpy as np
 from numpy.typing import NDArray
+from scipy.linalg import svdvals
 
 from ._constants import _EPS_LOG, _MAX_COMPLETE, _MIN_COMPLETE
 from ._frequency import _get_period, _get_periods
@@ -23,7 +24,7 @@ def _select_period(
     y: NDArray[np.floating],
     n: int,
     freq: str,
-) -> tuple[int, list[int], int, list[int]]:
+) -> tuple[int, list[int], int, list[int], NDArray[np.floating]]:
     """MDL period selection via BIC on the SVD spectrum.
 
     For each candidate period the series is reshaped into a `(P × n_complete)`
@@ -34,6 +35,11 @@ def _select_period(
 
     BIC penalty: `(P + n_complete − 1) · log(T)` accounts for the
     parameters of a rank-1 + intercept fit at this candidate.
+
+    Returns ``(P, secondary, period, cal, svd_s)`` where ``svd_s`` is
+    the singular value array of the winning candidate's period-folded
+    matrix.  Downstream code reuses this for Gavish-Donoho optimal
+    shrinkage without a second SVD ("One SVD" principle).
     """
     period = _get_period(freq)
     cal = _get_periods(freq)
@@ -41,8 +47,13 @@ def _select_period(
     if not candidates:
         candidates = [max(period, 1)] if n // max(period, 1) >= _MIN_COMPLETE else [1]
 
+    best_svd_s = np.zeros(1)
     if len(candidates) == 1:
         P = candidates[0]
+        nc = n // P
+        if nc >= _MIN_COMPLETE and P >= 2:
+            mat_c = y[-(nc * P) :].reshape(nc, P).T
+            best_svd_s = svdvals(mat_c)
     else:
         T_max = min(n, _MAX_COMPLETE * min(candidates))
         y_sel = y[-T_max:]
@@ -52,13 +63,14 @@ def _select_period(
             if nc < _MIN_COMPLETE:
                 continue
             mat_c = y_sel[-(nc * p_cand) :].reshape(nc, p_cand).T
-            s = np.linalg.svd(mat_c, compute_uv=False)
+            s = svdvals(mat_c)
             rss1 = float(np.sum(s[1:] ** 2))
             T = nc * p_cand
             bic = T * np.log(max(rss1 / T, _EPS_LOG)) + (p_cand + nc - 1) * np.log(T)
             if bic < best_bic:
                 best_P, best_bic = p_cand, bic
+                best_svd_s = s
         P = best_P
 
     secondary = [p for p in cal if p != P and p > P] if cal else []
-    return P, secondary, period, cal
+    return P, secondary, period, cal, best_svd_s

@@ -42,7 +42,7 @@ from ._constants import (
     _MIN_COMPLETE,
     _PHASE_NOISE_K,
 )
-from ._level import _bc, _bc_inv, _bc_lambda, _estimate_phi, _ridge_sa
+from ._level import _bc, _bc_inv, _bc_lambda, _estimate_phi, _optshrink_factor, _ridge_sa
 from ._period import _select_period
 from ._shape import _compute_cross_periods, _compute_shape2, _estimate_shape
 
@@ -701,7 +701,7 @@ def forecast(
     n = len(y)
 
     # 3. MDL period selection (with fallback to P=1 / Gaussian for very short series)
-    P, secondary, period, _cal = _select_period(y, n, freq)
+    P, secondary, period, _cal, svd_s = _select_period(y, n, freq)
     n_complete = n // P
     if n_complete < _MIN_COMPLETE:
         if P > 1:
@@ -743,6 +743,12 @@ def forecast(
     y_trim = y[-usable:]
     mat = y_trim.reshape(n_complete, P).T
     L = mat.sum(axis=0)
+
+    # 5a. Gavish-Donoho 2014 optimal Frobenius shrinkage of the rank-1
+    #     singular value, reusing the SVD that BIC period selection
+    #     already computed ("One SVD" principle).  L is collinear with
+    #     σ₁v₁, so the scalar shrinkage factor applies directly.
+    L = L * _optshrink_factor(svd_s, P, n_complete)
 
     # 6. Estimate Shape (Dirichlet-Multinomial EB) — also returns m = ⌈h/P⌉
     S_forecast, S_hist, m = _estimate_shape(mat, n_complete, P, secondary, L, horizon)

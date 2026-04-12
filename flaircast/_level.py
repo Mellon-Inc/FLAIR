@@ -146,6 +146,38 @@ def _ridge_sa(
 # ── Gavish-Donoho 2014 optimal Frobenius shrinkage ─────────────────────
 
 
+def _optshrink_factor(svd_s: NDArray[np.floating], P: int, n_complete: int) -> float:
+    """Gavish-Donoho 2014 optimal Frobenius shrinkage factor from
+    pre-computed singular values.
+
+    Returns ``c ∈ (0, 1]`` such that ``L * c`` is the minimax-optimal
+    rank-1 Level under the spiked rectangular model.  The singular
+    values ``svd_s`` come from ``_select_period``'s BIC SVD — no
+    additional matrix decomposition ("One SVD" principle).
+
+    Falls back to ``1.0`` when the spectrum is degenerate or the top
+    singular value is subcritical.
+    """
+    if svd_s.size < 2 or min(P, n_complete) < 2:
+        return 1.0
+    sigma_1 = float(svd_s[0])
+    if sigma_1 < _EPS:
+        return 1.0
+    sigma_med = float(np.median(svd_s))
+    if sigma_med < _EPS:
+        return 1.0
+    beta = min(P, n_complete) / max(P, n_complete)
+    mu_beta = _mp_median(round(beta, 4))
+    sigma_noise = sigma_med / np.sqrt(mu_beta)
+    threshold = (1.0 + np.sqrt(beta)) * sigma_noise
+    if sigma_1 <= threshold:
+        return 1.0
+    inner = (sigma_1**2 - (1.0 + beta) * sigma_noise**2) ** 2 - 4.0 * beta * sigma_noise**4
+    if inner <= 0.0:
+        return 1.0
+    return float(np.clip(np.sqrt(inner) / sigma_1**2, _EPS, 1.0))
+
+
 @lru_cache(maxsize=128)
 def _mp_median(beta: float) -> float:
     """Median of the Marchenko–Pastur distribution at aspect ratio ``β``.
@@ -211,11 +243,11 @@ def _rank1_svd_summary(
     P, nc = mat.shape
     if min(P, nc) < 2:
         return 1.0, _EPS_BOXCOX, np.zeros_like(mat)
-    U, s, Vt = np.linalg.svd(mat, full_matrices=False)
+    s = np.linalg.svd(mat, compute_uv=False)
     sigma_1 = float(s[0])
     if sigma_1 < _EPS:
         return 1.0, _EPS_BOXCOX, np.zeros_like(mat)
-    rank1 = sigma_1 * np.outer(U[:, 0], Vt[0, :])
+    rank1 = np.zeros_like(mat)  # placeholder; unused after spectrum-norm revert
     sigma_med = float(np.median(s))
     if sigma_med < _EPS:
         return 1.0, _EPS_BOXCOX, rank1
