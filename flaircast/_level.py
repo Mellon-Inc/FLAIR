@@ -5,6 +5,8 @@ This module hosts the per-period Level pipeline:
 - Box-Cox transform (`_bc_lambda`, `_bc`, `_bc_inv`)
 - Ridge regression with LOOCV soft-average and LWCP normalization
   (`_ridge_sa`)
+- Gavish-Donoho 2014 optimal Frobenius shrinkage of the rank-1 singular
+  value of the period-folded snapshot (`_optshrink_rank1`)
 - Damped-trend coefficient estimator (`_estimate_phi`)
 
 The Level itself (per-period sums of the period-folded matrix) is built
@@ -13,8 +15,12 @@ inside `_forecast`; this module provides the operators that act on it.
 
 from __future__ import annotations
 
+from functools import lru_cache
+
 import numpy as np
 from numpy.typing import NDArray
+from scipy.integrate import quad
+from scipy.optimize import brentq
 from scipy.stats import boxcox as scipy_boxcox
 
 from ._constants import (
@@ -135,6 +141,98 @@ def _ridge_sa(
     loo = loo_raw / np.sqrt(np.maximum(1 + h_avg, _EPS))
 
     return beta, loo, gcv_min, Vt, s, d_avg
+
+
+# ── Gavish-Donoho 2014 optimal Frobenius shrinkage ─────────────────────
+
+
+@lru_cache(maxsize=128)
+def _mp_median(beta: float) -> float:
+    """Median of the Marchenko–Pastur distribution at aspect ratio ``β``.
+
+    The MP density on ``[y_-, y_+]`` with ``y_± = (1 ± √β)²`` is
+
+        ρ(y) = √((y_+ − y)(y − y_-)) / (2π β y),
+
+    and the median ``μ_β`` is the unique value in ``(y_-, y_+)`` whose
+    cumulative density equals ``0.5``.  No closed form exists; we solve
+    the implicit equation numerically and cache the result per ``β``.
+
+    Used by Gavish–Donoho's median-based noise estimator
+    ``σ̂ = σ_med / √μ_β`` (see :func:`_optshrink_rank1`).
+    """
+    if beta <= _EPS:
+        return 1.0
+    b = min(beta, 1.0)
+    y_minus = (1.0 - np.sqrt(b)) ** 2
+    y_plus = (1.0 + np.sqrt(b)) ** 2
+
+    def density(y: float) -> float:
+        if y <= y_minus or y >= y_plus:
+            return 0.0
+        return float(np.sqrt((y_plus - y) * (y - y_minus)) / (2.0 * np.pi * b * y))
+
+    def cdf_minus_half(m: float) -> float:
+        c, _ = quad(density, y_minus, m, limit=100)
+        return c - 0.5
+
+    return float(brentq(cdf_minus_half, y_minus + _EPS, y_plus - _EPS, xtol=1e-8))
+
+
+def _rank1_svd_summary(
+    mat: NDArray[np.floating],
+) -> tuple[float, float, NDArray[np.floating]]:
+    """Single SVD pass that returns the three rank-1 quantities FLAIR uses.
+
+    Returns
+    -------
+    factor : float
+        Gavish-Donoho 2014 optimal Frobenius shrinkage factor in
+        ``(0, 1]`` (or ``1.0`` for degenerate spectra).  Multiplying
+        ``L`` by this factor yields the minimax-optimal rank-1
+        reconstruction under the spiked rectangular model.
+    sigma_noise : float
+        Marchenko-Pastur median-based noise scale ``σ_med / √μ_β``.
+        Used by the phase-noise sampler as the natural floor for the
+        rank-1 magnitude denominator (replaces the legacy
+        ``0.1 · median(|fitted|)`` clamp).
+    rank1 : ndarray, shape (P, n_c)
+        ``σ₁ u₁ v₁ᵀ`` — the rank-1 signal magnitude that defines the
+        scale-invariant phase-noise denominator.
+
+    All three quantities come from a single
+    ``np.linalg.svd(mat, full_matrices=False)`` call so the SVD is
+    computed exactly once per forecast.
+
+    Returns the safe defaults ``(1.0, _EPS, S_proxy_zero)`` when ``mat``
+    is degenerate (``min(P, n_c) < 2`` or ``σ₁ ≈ 0``); the call sites
+    use these unconditionally as multiplicative factors / floors.
+    """
+    P, nc = mat.shape
+    if min(P, nc) < 2:
+        return 1.0, _EPS_BOXCOX, np.zeros_like(mat)
+    U, s, Vt = np.linalg.svd(mat, full_matrices=False)
+    sigma_1 = float(s[0])
+    if sigma_1 < _EPS:
+        return 1.0, _EPS_BOXCOX, np.zeros_like(mat)
+    rank1 = sigma_1 * np.outer(U[:, 0], Vt[0, :])
+    sigma_med = float(np.median(s))
+    if sigma_med < _EPS:
+        return 1.0, _EPS_BOXCOX, rank1
+    beta = min(P, nc) / max(P, nc)
+    mu_beta = _mp_median(round(beta, 4))
+    sigma_noise = sigma_med / np.sqrt(mu_beta)
+    # Gavish-Donoho 2014 Theorem 1: optimal Frobenius shrinker.
+    threshold = (1.0 + np.sqrt(beta)) * sigma_noise
+    if sigma_1 <= threshold:
+        return 1.0, sigma_noise, rank1  # subcritical fallback (BIC
+        # already guarantees rank-1 is present in the chosen P)
+    inner = (sigma_1**2 - (1.0 + beta) * sigma_noise**2) ** 2 - 4.0 * beta * sigma_noise**4
+    if inner <= 0.0:
+        return 1.0, sigma_noise, rank1
+    sigma_1_shrunk = float(np.sqrt(inner) / sigma_1)
+    factor = float(np.clip(sigma_1_shrunk / sigma_1, _EPS, 1.0))
+    return factor, sigma_noise, rank1
 
 
 # ── Damped trend (LSR1 boundary extrapolation) ─────────────────────────

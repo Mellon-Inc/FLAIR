@@ -48,10 +48,21 @@ FREQ_TO_PERIODS = {
 def _resolve_freq(freq: str) -> str:
     """Normalize a pandas-style frequency string for table lookup.
 
-    Strips offset anchors (`W-SUN` → `W`, `Q-DEC` → `Q`, `A-DEC` → `A`)
-    and rewrites the legacy `MIN` alias to `T`.
+    Strips offset anchors (`W-SUN` → `W`, `Q-DEC` → `Q`, `A-DEC` → `A`),
+    rewrites the modern `MIN` alias to `T`, and rewrites the modern
+    pandas 2.2+ end-of-period aliases (`ME`, `QE`, `YE`) to their legacy
+    single-letter equivalents.  Without this rewrite, a bare `ME` or
+    `QE` falls through to the default period of 1 and FLAIR silently
+    forfeits the periodic decomposition.
     """
     f = freq.upper().replace("MIN", "T")
+    # pandas 2.2+ end-of-period aliases → legacy single-letter codes.
+    if f.endswith("ME"):
+        f = f[:-2] + "M"
+    elif f.endswith("QE"):
+        f = f[:-2] + "Q"
+    elif f.endswith("YE"):
+        f = f[:-2] + "Y"
     for base in ("W", "Q", "A", "Y"):
         if f.startswith(base + "-"):
             return base
