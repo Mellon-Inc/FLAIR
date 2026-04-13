@@ -63,7 +63,7 @@ def _resolve_freq(freq: str) -> str:
         f = f[:-2] + "Q"
     elif f.endswith("YE"):
         f = f[:-2] + "Y"
-    for base in ("W", "Q", "A", "Y"):
+    for base in ("W", "Q", "A", "Y", "M"):
         if f.startswith(base + "-"):
             return base
     return f

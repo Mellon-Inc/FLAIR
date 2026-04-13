@@ -358,7 +358,7 @@ def _compute_damped_trend(
     n_complete: int,
 ) -> NDArray[np.floating]:
     """Compute the damped-trend coefficients for ``m`` forecast steps."""
-    phi = _estimate_phi(L_bc)
+    phi = min(_estimate_phi(L_bc), 1.0 - _EPS)  # cap at <1 to avoid 1/(1−φ) blow-up
     if phi <= _EPS:
         return np.full(m, (n_complete - 1.0) / n_complete)
     out = np.empty(m)
@@ -457,17 +457,21 @@ def _sample_level_paths(
     augmented Level path array and the Student-t degrees of freedom
     used (so the caller can reuse it for post-hoc shrinkage).
     """
-    sigma2_loo = float(np.mean(loo_resid**2))
     nu = max(n_train - nf, 3)  # floor at 3 for stability
 
     if _LEVEL_NOISE_MODE == "bootstrap" and len(loo_resid) >= 4:
         loo_std = max(float(np.std(loo_resid)), _EPS)
         loo_unit = (loo_resid - float(np.mean(loo_resid))) / loo_std
+        # Use variance (not second moment) to scale: the mean-subtracted
+        # unit residuals have Var=1, so the noise pool should have
+        # Var = Var(loo_resid) × (1 + h_test), not E[r²] × (1 + h_test).
+        sigma2_loo = float(np.var(loo_resid))
         flat = rng.choice(loo_unit, size=n_samples * m, replace=True)
         noise_pool = flat.reshape(n_samples, m) * np.sqrt(
             sigma2_loo * (1.0 + h_test)
         )[np.newaxis, :]
     else:
+        sigma2_loo = float(np.mean(loo_resid**2))
         noise_pool = (
             rng.standard_t(df=nu, size=(n_samples, m))
             * np.sqrt(sigma2_loo * (1.0 + h_test))[np.newaxis, :]
