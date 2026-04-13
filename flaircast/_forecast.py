@@ -597,20 +597,23 @@ def _assemble_and_calibrate(
     S_h = S_forecast[step_idx, phase_idx]
     samples = L_hat_all[:, step_idx] * S_h[np.newaxis, :] * (1 + phase_noise) - y_shift
 
-    # Clip to historical support.  Inverse Box-Cox combined with
-    # recursive simulation can produce extreme values.  Recent window
-    # determines the soft margin; the global minimum ``y_floor`` is a
-    # hard lower bound so forecasts never extrapolate below observed
-    # support (prevents 30 %+ negative samples on non-negative counts).
+    # Clip to historical support.  The lower bound is the global
+    # observed minimum ``y_floor`` — a physical constraint that
+    # prevents negative forecasts on non-negative series.  The upper
+    # bound is the recent-window maximum plus one range, preventing
+    # unbounded extrapolation from Box-Cox inverse overflow.  No
+    # symmetric lower-range clip is applied: the bootstrap predictive
+    # distribution's lower tail is preserved so quantile calibration
+    # is not distorted by truncation.
     lookback = min(max(horizon * 2, _PHASE_NOISE_K), len(y_arr))
     rec = y_arr[-lookback:]
     valid_rec = rec[~np.isnan(rec)]
     valid_all = y_arr[~np.isnan(y_arr)]
     if len(valid_rec) > 0 and len(valid_all) > 0:
-        y_lo, y_hi = float(valid_rec.min()), float(valid_rec.max())
-        y_range = max(y_hi - y_lo, _EPS_SHAPE)
+        y_hi = float(valid_rec.max())
+        y_range = max(y_hi - float(valid_rec.min()), _EPS_SHAPE)
         y_floor = float(valid_all.min())
-        samples = np.clip(samples, max(y_lo - y_range, y_floor), y_hi + y_range)
+        samples = np.clip(samples, y_floor, y_hi + y_range)
 
     # Integer snap for strictly integer-valued observations (count data).
     # Observations and forecasts must live in the same ambient space.
