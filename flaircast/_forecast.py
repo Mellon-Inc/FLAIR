@@ -361,10 +361,8 @@ def _compute_damped_trend(
     phi = min(_estimate_phi(L_bc), 1.0 - _EPS)  # cap at <1 to avoid 1/(1−φ) blow-up
     if phi <= _EPS:
         return np.full(m, (n_complete - 1.0) / n_complete)
-    out = np.empty(m)
-    for j in range(m):
-        out[j] = ((n_complete - 1) + phi * (1.0 - phi ** (j + 1)) / (1.0 - phi)) / n_complete
-    return out
+    j = np.arange(1, m + 1, dtype=float)
+    return ((n_complete - 1) + phi * (1.0 - phi**j) / (1.0 - phi)) / n_complete
 
 
 # ── LWCP test-point leverages ──────────────────────────────────────────
@@ -627,7 +625,16 @@ def _assemble_and_calibrate(
         med = np.median(samples, axis=0, keepdims=True)
         samples = med + shrink * (samples - med)
 
-    return np.asarray(np.nan_to_num(samples, posinf=0.0, neginf=0.0), dtype=np.float64)
+    # Map residual NaN/inf to the clip bounds rather than zero so
+    # overflow samples stay at the edge of historical support.
+    if len(valid_rec) > 0:
+        clip_hi = float(y_hi + y_range) if len(valid_rec) > 0 else 0.0
+    else:
+        clip_hi = 0.0
+    return np.asarray(
+        np.nan_to_num(samples, nan=0.0, posinf=clip_hi, neginf=0.0),
+        dtype=np.float64,
+    )
 
 
 # ── Public orchestrator ────────────────────────────────────────────────
