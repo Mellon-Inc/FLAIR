@@ -708,6 +708,7 @@ def forecast(
             P = 1
             secondary = []
             n_complete = n
+            svd_s = np.zeros(1)  # invalidate stale SVD from discarded P
         if n_complete < _MIN_COMPLETE:
             return _degenerate_p1_fallback(y, horizon, n_samples, n, y_shift, rng)
 
@@ -729,6 +730,7 @@ def forecast(
             P = 1
             secondary = []
             n_complete = n
+            svd_s = np.zeros(1)  # invalidate stale SVD from discarded P
 
     # 4. Cap to MAX_COMPLETE periods (memory / runtime guard)
     if n_complete > _MAX_COMPLETE:
@@ -748,6 +750,9 @@ def forecast(
     #     singular value, reusing the SVD that BIC period selection
     #     already computed ("One SVD" principle).  L is collinear with
     #     σ₁v₁, so the scalar shrinkage factor applies directly.
+    #     L_raw is kept for phase-noise residuals (Finding 3: using the
+    #     shrunk L would bias the residual matrix positive).
+    L_raw = L.copy()
     L = L * _optshrink_factor(svd_s, P, nc_svd if nc_svd > 0 else n_complete)
 
     # 6. Estimate Shape (Dirichlet-Multinomial EB) — also returns m = ⌈h/P⌉
@@ -839,9 +844,11 @@ def forecast(
         forecast_pos = (n_complete + np.arange(m)) % cp_main
         L_hat_all = L_hat_all * S2[forecast_pos][np.newaxis, :]
 
-    # 17. Phase-noise sampling (scenario-coherent column sampling)
+    # 17. Phase-noise sampling (scenario-coherent column sampling).
+    #     Uses L_raw (pre-shrinkage) so the residual matrix E = mat − L·S
+    #     is unbiased; the shrunk L is for the Level Ridge only.
     phase_noise, step_idx, phase_idx = _phase_noise_sample(
-        mat, S_hist, L, n_complete, P, horizon, m, n_samples, rng
+        mat, S_hist, L_raw, n_complete, P, horizon, m, n_samples, rng
     )
 
     # 18. Multiplicative assembly + clipping + post-hoc shrinkage

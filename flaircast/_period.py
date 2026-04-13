@@ -24,7 +24,7 @@ def _select_period(
     y: NDArray[np.floating],
     n: int,
     freq: str,
-) -> tuple[int, list[int], int, list[int], NDArray[np.floating]]:
+) -> tuple[int, list[int], int, list[int], NDArray[np.floating], int]:
     """MDL period selection via BIC on the SVD spectrum.
 
     For each candidate period the series is reshaped into a `(P × n_complete)`
