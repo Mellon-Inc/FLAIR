@@ -725,7 +725,7 @@ def forecast(
     #     We compute the feature count from the already-known secondary
     #     period list and fall back to P=1 if the bound is not met.
     if P > 1:
-        cross_periods_est, max_cp_est = _compute_cross_periods(
+        _, max_cp_est = _compute_cross_periods(
             secondary, P, period, n_complete
         )
         start_est = max(1, max_cp_est) if max_cp_est >= 2 else 1
