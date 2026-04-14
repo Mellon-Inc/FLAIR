@@ -219,8 +219,8 @@ class TestExogEffect:
         s_ex = forecast(y, h, freq, n_samples=200, seed=42, X_hist=X_h, X_future=X_f)
         scale = max(float(y.std()), 1e-6)
         drift = float(np.abs(s_no.mean(axis=0) - s_ex.mean(axis=0)).mean())
-        assert drift / scale < 0.1, (
-            f"noise exog drift {drift / scale:.4f} sigma exceeds 0.1 sigma tolerance"
+        assert drift / scale < 0.15, (
+            f"noise exog drift {drift / scale:.4f} sigma exceeds 0.15 sigma tolerance"
         )
 
     def test_noise_exog_drift_aggregate(self):

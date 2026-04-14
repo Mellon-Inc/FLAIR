@@ -865,6 +865,15 @@ def forecast(
         mat, S_hist, L_raw, n_complete, P, horizon, m, n_samples, rng
     )
 
+    # 17a. Horizon-adaptive phase-noise deflation.  The Level paths
+    #      already widen with horizon via ``sqrt(1 + h_test)``.  Phase
+    #      noise drawn at full historical magnitude compounds with this,
+    #      over-dispersing the tails.  Dividing by ``sqrt(1 + h_test)``
+    #      removes the double-counted variance so the total predictive
+    #      spread grows at the rate set by the LWCP leverages alone.
+    phase_deflate = 1.0 / np.sqrt(1.0 + h_test[step_idx])
+    phase_noise = phase_noise * phase_deflate[np.newaxis, :]
+
     # 18. Multiplicative assembly + clipping + post-hoc shrinkage
     return _assemble_and_calibrate(
         L_hat_all,
