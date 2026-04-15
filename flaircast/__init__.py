@@ -5,11 +5,9 @@ WHAT (level) from HOW (shape) via period-aligned matrix reshaping.
 
     y(phase, period) = Level(period) × Shape(phase)
 
-Level is forecast by Ridge regression with soft-average GCV.
-Shape is estimated via Dirichlet-Multinomial empirical Bayes, with
-context derived from the secondary period structure (e.g., day-of-week
-for hourly data).  When no secondary period exists, degenerates to
-the simple K-period average.
+Level is forecast by Ridge regression with LOOCV soft-average.
+Shape is the frozen average of within-period proportions from the
+last K=2 complete periods (no learning, no context conditioning).
 
 Secondary periodicity in Level is handled by Shape₂ deseasonalization:
 the proportional decomposition is applied recursively, with the raw
@@ -31,7 +29,7 @@ Module map (paper section ↔ file):
 - `_constants`  — numerical fudge factors and feature-flag toggles
 - `_frequency`  — calendar tables and frequency-string resolution
 - `_period`     — MDL period selection (BIC on the SVD spectrum)
-- `_shape`      — Shape₁ (Dirichlet-Multinomial EB) and Shape₂ (BIC-gated)
+- `_shape`      — Shape₁ (frozen K-period average) and Shape₂ (BIC-gated)
 - `_level`      — Box-Cox, Ridge with LOOCV soft-average + LWCP, damped trend
 - `_forecast`   — `forecast()` orchestrator and `FLAIR` class wrapper
 

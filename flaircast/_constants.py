@@ -37,7 +37,7 @@ _MAX_COMPLETE = 500
 
 # LSR1 reparameterization toggle.  When True, the Level Ridge fits
 # `ΔL_innov` (random-walk prior on `β₂`); when False, it fits `L_innov`
-# directly (stationary prior).  See `_forecast._fit_level_ridge`.
+# directly (stationary prior).  See `_forecast._build_level_design`.
 _DIFF_TARGET = True
 
 # Number of recent periods used for Shape estimation.  Sensitivity
