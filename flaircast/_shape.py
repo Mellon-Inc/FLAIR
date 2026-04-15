@@ -2,10 +2,14 @@
 
 Hosts the two Shape stages of the FLAIR pipeline:
 
-- `_estimate_shape` — Shape₁ (Dirichlet-Multinomial empirical Bayes)
-  conditioned on the secondary period context (e.g. day-of-week for
-  hourly data).  Degenerates to a global K-period average when no
-  secondary structure exists.
+- `_estimate_shape` — Shape₁ as a single frozen vector, the average of
+  within-period proportions from the last ``_SHAPE_K`` periods.  An
+  earlier version conditioned on a secondary period context via
+  Dirichlet-Multinomial smoothing; the 97-configuration ablation
+  showed this refinement is marginally harmful (−0.4 % relMASE,
+  −0.9 % relCRPS) because the Prior-centered Ridge already captures
+  weekly structure via cross-period lags, so FLAIR uses one global
+  Shape with no context conditioning.
 
 - `_compute_shape2` — Shape₂ (BIC-gated empirical Bayes shrinkage of a
   secondary periodic Level pattern, e.g. annual seasonality of a daily
@@ -83,22 +87,31 @@ def _estimate_shape(
     mat: NDArray[np.floating],
     n_complete: int,
     P: int,
-    secondary: list[int],
-    L: NDArray[np.floating],
+    secondary: list[int],  # noqa: ARG001  # retained for API stability
+    L: NDArray[np.floating],  # noqa: ARG001
     horizon: int,
 ) -> tuple[NDArray[np.floating], NDArray[np.floating], int]:
-    """Dirichlet-Multinomial empirical Bayes Shape estimation.
+    """Frozen Shape: global average of within-period proportions.
 
-    When a secondary period exists (e.g. day-of-week for hourly data,
-    `C = secondary[0] // P`), per-context Shape vectors are estimated
-    by Dirichlet-Multinomial smoothing toward the global K-period
-    average; the smoothing strength `kappa` is fit by method-of-moments
-    on the per-phase variance of the recent `K × C` periods.
+    The Shape is a single fixed vector ``S ∈ Δ^{P−1}`` broadcast across
+    all forecast and historical steps.  Earlier versions conditioned on a
+    secondary period (e.g. day-of-week for hourly data) via
+    Dirichlet-Multinomial smoothing; the 97-configuration ablation
+    showed this refinement is marginally harmful (−0.4 % relMASE,
+    −0.9 % relCRPS) because the Prior-centered Ridge already captures
+    weekly structure through cross-period lags.  Removing it gives a
+    purer "frozen Shape" method that is simpler, slightly better, and
+    consistent with the BBP sub-criticality of the rank-1 residual's
+    second singular vector.
+
+    The ``secondary`` and ``L`` parameters are retained for API
+    stability — the rest of the pipeline still uses ``secondary`` for
+    Ridge cross-period lags via ``_compute_cross_periods``.
 
     Returns
     -------
     S_forecast : ndarray, shape (m, P)
-        Per-block forecast Shape, where `m = ceil(horizon / P)`.
+        Per-block forecast Shape, where ``m = ceil(horizon / P)``.
     S_hist : ndarray, shape (n_complete, P)
         Per-period historical Shape used for the rank-1 reconstruction
         residual that drives the phase-noise sampler.
@@ -111,47 +124,9 @@ def _estimate_shape(
     S_global = np.where(totals > _EPS, recent / totals, 1.0 / P).mean(axis=1)
     S_global /= max(S_global.sum(), _EPS)
 
-    C = (
-        secondary[0] // P
-        if (secondary and secondary[0] % P == 0 and n_complete >= secondary[0] // P)
-        else 1
-    )
     m = int(np.ceil(horizon / P))
-
-    if C <= 1:
-        S_forecast = np.tile(S_global, (m, 1))
-        S_hist = np.tile(S_global, (n_complete, 1))
-    else:
-        K_ds = min(K * C, n_complete)
-        ds_mat = mat[:, -K_ds:]
-        ds_L = L[-K_ds:]
-        ds_ctx = np.arange(n_complete - K_ds, n_complete) % C
-
-        ds_totals = ds_mat.sum(axis=0, keepdims=True)
-        ds_props = np.where(ds_totals > _EPS, ds_mat / ds_totals, 1.0 / P)
-        mp = ds_props.mean(axis=1)
-        vp = ds_props.var(axis=1, ddof=1)
-        valid = (mp > _EPS_SHAPE) & (vp > _EPS)
-        kappa = (
-            max(float(np.median(mp[valid] * (1 - mp[valid]) / vp[valid] - 1)), 0.0)
-            if valid.sum() >= 2
-            else 1e6
-        )
-
-        S_ctx = np.empty((C, P))
-        for c_val in range(C):
-            mask = ds_ctx == c_val
-            if mask.sum() == 0:
-                S_ctx[c_val] = S_global
-            else:
-                S_c = (kappa * S_global + ds_mat[:, mask].sum(axis=1)) / max(
-                    kappa + ds_L[mask].sum(), _EPS
-                )
-                S_ctx[c_val] = S_c / max(S_c.sum(), _EPS)
-
-        S_forecast = S_ctx[(n_complete + np.arange(m)) % C]
-        S_hist = S_ctx[np.arange(n_complete) % C]
-
+    S_forecast = np.tile(S_global, (m, 1))
+    S_hist = np.tile(S_global, (n_complete, 1))
     return S_forecast, S_hist, m
 
 

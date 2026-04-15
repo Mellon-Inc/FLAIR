@@ -16,6 +16,7 @@ FREQ_TO_PERIOD = {
     "5T": 12,
     "10T": 6,
     "15T": 4,
+    "30T": 48,
     "10S": 6,
     "H": 24,
     "D": 7,
@@ -35,6 +36,7 @@ FREQ_TO_PERIODS = {
     "5T": [12, 288],
     "10T": [6, 144],
     "15T": [4, 96],
+    "30T": [48, 336],
     "H": [24, 168],
     "D": [7, 365],
     "W": [52],
@@ -48,13 +50,27 @@ FREQ_TO_PERIODS = {
 def _resolve_freq(freq: str) -> str:
     """Normalize a pandas-style frequency string for table lookup.
 
-    Strips offset anchors (`W-SUN` → `W`, `Q-DEC` → `Q`, `A-DEC` → `A`)
-    and rewrites the legacy `MIN` alias to `T`.
+    Handles three classes of aliases that would otherwise miss the table:
+
+    1. Modern ``MIN`` suffix → legacy ``T`` (e.g. ``30min`` → ``30T``).
+    2. pandas 2.2+ end-of-period (``ME``, ``QE``, ``YE``) and
+       start-of-period (``MS``, ``QS``, ``YS``, ``AS``, ``BMS`` etc.)
+       aliases → their legacy single-letter equivalents.
+    3. Offset anchors (``W-SUN``, ``Q-DEC``, ``QE-DEC``) → base letter.
     """
     f = freq.upper().replace("MIN", "T")
-    for base in ("W", "Q", "A", "Y"):
-        if f.startswith(base + "-"):
+    # 1. Strip offset anchors first: "QE-DEC" → "QE", "W-SUN" → "W".
+    if "-" in f:
+        f = f.split("-")[0]
+    # 2. Strip pandas 2.2+ end/start-of-period suffixes:
+    #    "ME" → "M", "QE" → "Q", "MS" → "M", etc.
+    for suffix, base in (("ME", "M"), ("QE", "Q"), ("YE", "Y"),
+                         ("MS", "M"), ("QS", "Q"), ("YS", "Y"), ("AS", "A")):
+        if f == suffix:
             return base
+        if len(f) > len(suffix) and f.endswith(suffix):
+            f = f[: -len(suffix)] + base
+            break
     return f
 
 

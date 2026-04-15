@@ -193,3 +193,52 @@ class TestComputeShape2:
         L = np.zeros(20)
         result = _compute_shape2(L, cp=7, n_complete=20)
         assert result is None
+
+
+# ── Gavish-Donoho shrinkage tests ─────────────────────────────────────
+
+from flaircast._level import _mp_median, _optshrink_factor
+
+
+class TestMpMedian:
+    def test_returns_positive(self):
+        for beta in [0.1, 0.5, 1.0]:
+            assert _mp_median(beta) > 0
+
+    def test_cached(self):
+        v1 = _mp_median(0.24)
+        v2 = _mp_median(0.24)
+        assert v1 == v2
+
+    def test_monotone_decreasing(self):
+        # MP median decreases as beta increases (toward square matrix)
+        m1 = _mp_median(0.1)
+        m2 = _mp_median(0.5)
+        m3 = _mp_median(1.0)
+        assert m1 > m2 > m3
+
+
+class TestOptShrinkFactor:
+    def test_degenerate_returns_one(self):
+        assert _optshrink_factor(np.zeros(1), P=1, n_complete=10) == 1.0
+        assert _optshrink_factor(np.array([0.0, 0.0]), P=2, n_complete=2) == 1.0
+
+    def test_strong_signal_near_one(self):
+        # Strong rank-1: sigma_1 >> noise → factor close to 1
+        svd_s = np.array([100.0, 1.0, 0.5, 0.3])
+        f = _optshrink_factor(svd_s, P=4, n_complete=100)
+        assert 0.95 < f <= 1.0
+
+    def test_subcritical_returns_one(self):
+        # All singular values equal → no spike → factor = 1.0
+        svd_s = np.ones(5) * 0.1
+        assert _optshrink_factor(svd_s, P=5, n_complete=5) == 1.0
+
+    def test_in_zero_one_range(self):
+        rng = np.random.RandomState(0)
+        mat = rng.randn(12, 50)
+        mat += np.outer(rng.randn(12) * 5, np.ones(50))  # add rank-1
+        from scipy.linalg import svdvals
+        s = svdvals(mat)
+        f = _optshrink_factor(s, P=12, n_complete=50)
+        assert 0 < f <= 1.0

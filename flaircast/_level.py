@@ -5,6 +5,8 @@ This module hosts the per-period Level pipeline:
 - Box-Cox transform (`_bc_lambda`, `_bc`, `_bc_inv`)
 - Ridge regression with LOOCV soft-average and LWCP normalization
   (`_ridge_sa`)
+- Gavish-Donoho 2014 optimal Frobenius shrinkage of the rank-1 singular
+  value of the period-folded snapshot (`_optshrink_rank1`)
 - Damped-trend coefficient estimator (`_estimate_phi`)
 
 The Level itself (per-period sums of the period-folded matrix) is built
@@ -13,8 +15,12 @@ inside `_forecast`; this module provides the operators that act on it.
 
 from __future__ import annotations
 
+from functools import lru_cache
+
 import numpy as np
 from numpy.typing import NDArray
+from scipy.integrate import quad
+from scipy.optimize import brentq
 from scipy.stats import boxcox as scipy_boxcox
 
 from ._constants import (
@@ -54,10 +60,14 @@ def _bc(y: NDArray[np.floating], lam: float) -> NDArray[np.floating]:
 
 
 def _bc_inv(z: NDArray[np.floating], lam: float) -> NDArray[np.floating]:
-    """Inverse Box-Cox; clips the `exp` argument when `lam = 0`."""
+    """Inverse Box-Cox with overflow guard for both ``lam = 0`` and ``lam > 0``."""
     if lam == 0.0:
         return np.exp(np.clip(z, -_BC_EXP_CLIP, _BC_EXP_CLIP))
-    return np.maximum(z * lam + 1, _EPS) ** (1 / lam)
+    # For lam > 0, (z*lam + 1)^(1/lam) can overflow when z is large
+    # and lam is small.  Clip the base to prevent inf.
+    base = np.maximum(z * lam + 1, _EPS)
+    max_base = np.exp(_BC_EXP_CLIP * lam)  # exp(30 * lam) stays in float64
+    return np.minimum(base, max_base) ** (1 / lam)
 
 
 # ── Ridge with Soft-Average GCV ────────────────────────────────────────
@@ -135,6 +145,78 @@ def _ridge_sa(
     loo = loo_raw / np.sqrt(np.maximum(1 + h_avg, _EPS))
 
     return beta, loo, gcv_min, Vt, s, d_avg
+
+
+# ── Gavish-Donoho 2014 optimal Frobenius shrinkage ─────────────────────
+
+
+def _optshrink_factor(svd_s: NDArray[np.floating], P: int, n_complete: int) -> float:
+    """Gavish-Donoho 2014 optimal Frobenius shrinkage factor from
+    pre-computed singular values.
+
+    Returns ``c ∈ (0, 1]`` such that ``L * c`` is the minimax-optimal
+    rank-1 Level under the spiked rectangular model.  The singular
+    values ``svd_s`` come from ``_select_period``'s BIC SVD — no
+    additional matrix decomposition ("One SVD" principle).
+
+    Falls back to ``1.0`` when the spectrum is degenerate or the top
+    singular value is subcritical.
+    """
+    if svd_s.size < 2 or min(P, n_complete) < 2:
+        return 1.0
+    sigma_1 = float(svd_s[0])
+    if sigma_1 < _EPS:
+        return 1.0
+    sigma_med = float(np.median(svd_s))
+    if sigma_med < _EPS:
+        return 1.0
+    beta = min(P, n_complete) / max(P, n_complete)
+    mu_beta = _mp_median(round(beta, 4))
+    sigma_noise = sigma_med / np.sqrt(mu_beta)
+    threshold = (1.0 + np.sqrt(beta)) * sigma_noise
+    if sigma_1 <= threshold:
+        return 1.0
+    # Gavish-Donoho 2014 Corollary 1 / SIAM 2017 eq. 3.2:
+    #   σ* = (1/√2) · √(A + √(A² − 4βσ⁴))
+    A = sigma_1**2 - (1.0 + beta) * sigma_noise**2
+    disc = A**2 - 4.0 * beta * sigma_noise**4
+    if disc <= 0.0:
+        return 1.0
+    sigma_star = np.sqrt(A + np.sqrt(disc)) / np.sqrt(2.0)
+    return float(np.clip(sigma_star / sigma_1, _EPS, 1.0))
+
+
+@lru_cache(maxsize=128)
+def _mp_median(beta: float) -> float:
+    """Median of the Marchenko–Pastur distribution at aspect ratio ``β``.
+
+    The MP density on ``[y_-, y_+]`` with ``y_± = (1 ± √β)²`` is
+
+        ρ(y) = √((y_+ − y)(y − y_-)) / (2π β y),
+
+    and the median ``μ_β`` is the unique value in ``(y_-, y_+)`` whose
+    cumulative density equals ``0.5``.  No closed form exists; we solve
+    the implicit equation numerically and cache the result per ``β``.
+
+    Used by Gavish–Donoho's median-based noise estimator
+    ``σ̂ = σ_med / √μ_β`` (see :func:`_optshrink_rank1`).
+    """
+    if beta <= _EPS:
+        return 1.0
+    b = min(beta, 1.0)
+    y_minus = (1.0 - np.sqrt(b)) ** 2
+    y_plus = (1.0 + np.sqrt(b)) ** 2
+
+    def density(y: float) -> float:
+        if y <= y_minus or y >= y_plus:
+            return 0.0
+        return float(np.sqrt((y_plus - y) * (y - y_minus)) / (2.0 * np.pi * b * y))
+
+    def cdf_minus_half(m: float) -> float:
+        c, _ = quad(density, y_minus, m, limit=100)
+        return c - 0.5
+
+    return float(brentq(cdf_minus_half, y_minus + _EPS, y_plus - _EPS, xtol=1e-8))
 
 
 # ── Damped trend (LSR1 boundary extrapolation) ─────────────────────────

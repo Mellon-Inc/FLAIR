@@ -37,11 +37,12 @@ from ._constants import (
     _EPS,
     _EPS_BOXCOX,
     _EPS_SHAPE,
+    _LEVEL_NOISE_MODE,
     _MAX_COMPLETE,
     _MIN_COMPLETE,
     _PHASE_NOISE_K,
 )
-from ._level import _bc, _bc_inv, _bc_lambda, _estimate_phi, _ridge_sa
+from ._level import _bc, _bc_inv, _bc_lambda, _estimate_phi, _optshrink_factor, _ridge_sa
 from ._period import _select_period
 from ._shape import _compute_cross_periods, _compute_shape2, _estimate_shape
 
@@ -357,13 +358,11 @@ def _compute_damped_trend(
     n_complete: int,
 ) -> NDArray[np.floating]:
     """Compute the damped-trend coefficients for ``m`` forecast steps."""
-    phi = _estimate_phi(L_bc)
+    phi = min(_estimate_phi(L_bc), 1.0 - _EPS)  # cap at <1 to avoid 1/(1−φ) blow-up
     if phi <= _EPS:
         return np.full(m, (n_complete - 1.0) / n_complete)
-    out = np.empty(m)
-    for j in range(m):
-        out[j] = ((n_complete - 1) + phi * (1.0 - phi ** (j + 1)) / (1.0 - phi)) / n_complete
-    return out
+    j = np.arange(1, m + 1, dtype=float)
+    return ((n_complete - 1) + phi * (1.0 - phi**j) / (1.0 - phi)) / n_complete
 
 
 # ── LWCP test-point leverages ──────────────────────────────────────────
@@ -441,25 +440,41 @@ def _sample_level_paths(
     n_train: int,
     rng: np.random.RandomState,
 ) -> tuple[NDArray[np.floating], int]:
-    """Recursive Level path sampling under a Student-t innovation model.
+    """Recursive Level path sampling.
 
-    When ``σ²`` is unknown and estimated from the LWCP-normalized LOO
-    residuals, the predictive distribution in Box-Cox space is
-    Student-t with ``ν = n_train − p`` degrees of freedom.  As
-    ``n → ∞``, ``t_ν → N(0, 1)``; for short series, the heavier tails
-    reflect higher uncertainty automatically — zero new hyperparameters.
+    Default noise model is an empirical bootstrap from the LWCP-normalized
+    LOO residuals: one-step-ahead predictive errors re-sampled with
+    replacement.  This preserves the empirical skew and kurtosis of the
+    training distribution that a parametric Student-t would smooth away.
+
+    Fallback to Student-t (``ν = n_train − p``) when the residual pool
+    is too small (``n_loo < 4``) to bootstrap reliably; Student-t then
+    gives the standard Bayesian-Ridge predictive distribution.
 
     Returns ``(L_paths, nu)``: the ``(n_samples, n_complete + m)``
     augmented Level path array and the Student-t degrees of freedom
     used (so the caller can reuse it for post-hoc shrinkage).
     """
-    sigma2_loo = float(np.mean(loo_resid**2))
     nu = max(n_train - nf, 3)  # floor at 3 for stability
 
-    noise_pool = (
-        rng.standard_t(df=nu, size=(n_samples, m))
-        * np.sqrt(sigma2_loo * (1.0 + h_test))[np.newaxis, :]
-    )
+    if _LEVEL_NOISE_MODE == "bootstrap" and len(loo_resid) >= 4:
+        loo_std = max(float(np.std(loo_resid)), _EPS)
+        loo_unit = (loo_resid - float(np.mean(loo_resid))) / loo_std
+        # Use variance (not second moment) to scale: the mean-subtracted
+        # unit residuals have Var=1, so the noise pool should have
+        # Var = Var(loo_resid) × (1 + h_test), not E[r²] × (1 + h_test).
+        sigma2_loo = float(np.var(loo_resid))
+        flat = rng.choice(loo_unit, size=n_samples * m, replace=True)
+        noise_pool = flat.reshape(n_samples, m) * np.sqrt(
+            sigma2_loo * (1.0 + h_test)
+        )[np.newaxis, :]
+    else:
+        sigma2_loo = float(np.mean(loo_resid**2))
+        noise_pool = (
+            rng.standard_t(df=nu, size=(n_samples, m))
+            * np.sqrt(sigma2_loo * (1.0 + h_test))[np.newaxis, :]
+        )
+
     L_paths = np.column_stack([np.tile(L_innov, (n_samples, 1)), np.zeros((n_samples, m))])
 
     for j in range(m):
@@ -484,32 +499,61 @@ def _phase_noise_sample(
     n_complete: int,
     P: int,
     horizon: int,
-    m: int,
+    m: int,  # noqa: ARG001  # kept for API stability
     n_samples: int,
     rng: np.random.RandomState,
 ) -> tuple[NDArray[np.floating], NDArray[np.intp], NDArray[np.intp]]:
     """Scenario-coherent phase-noise sampling from SVD residual columns.
 
-    ``R[p, k] = (observed − fitted) / |fitted|`` captures phase-specific
-    multiplicative noise.  Each *column* of ``R`` is one historical
-    period's residual pattern across all P phases.  Sampling whole
-    columns preserves cross-phase correlation: every phase within a
-    forecast block shares one historical period's deviation pattern.
-    This is the empirical distribution of the rank-1 residual, which
-    is the natural uncertainty source for a factored model.
+    ``R[p, k] = (observed − fitted) / max(|fitted|, τ)`` captures
+    phase-specific multiplicative noise.  The denominator is clamped at
+    ``τ = 0.1 · median(|fitted|)`` — a robust scale-aware floor that
+    prevents relative residuals from exploding when a cell is near zero
+    (sparse count data, low-phase peaks) while preserving the
+    heteroscedastic scaling on normal cells.
+
+    Each sample draws **one** historical period index and reuses that
+    column across every forecast step; this yields scenario-coherent
+    sample paths (sample *k* = "history repeats column ``col_idx[k]``")
+    rather than mixing historical scenarios within a single path.
 
     Returns ``(phase_noise, step_idx, phase_idx)``.
     """
     fitted_mat = S_hist.T * L
     E = mat - fitted_mat
     K_r = min(_PHASE_NOISE_K, n_complete)
-    R = E[:, -K_r:] / np.maximum(np.abs(fitted_mat[:, -K_r:]), _EPS_BOXCOX)
+    fitted_recent = np.abs(fitted_mat[:, -K_r:])
+    fitted_clamp = (
+        max(float(np.median(fitted_recent[fitted_recent > _EPS])) * 0.1, _EPS_BOXCOX)
+        if (fitted_recent > _EPS).any()
+        else _EPS_BOXCOX
+    )
+    R = E[:, -K_r:] / np.maximum(fitted_recent, fitted_clamp)
+    # Adaptive per-phase bias shrinkage.  The Shape is computed from the
+    # last ``_SHAPE_K = 2`` periods, so ``R[p, :]`` may carry a per-phase
+    # offset when older periods drift.  We remove the *noise* part of
+    # that offset using a James–Stein-style shrinkage: each phase mean
+    # is multiplied by ``se² / (mean² + se²)``, i.e. the posterior mean
+    # of a zero-centered Gaussian prior.  Phases whose sample mean
+    # dominates their standard error are treated as signal and kept;
+    # phases whose mean is of the same order as the standard error are
+    # treated as sampling noise and pulled toward zero.
+    if K_r >= 4:
+        phase_mean = R.mean(axis=1, keepdims=True)
+        phase_var = R.var(axis=1, ddof=1, keepdims=True)
+        se_sq = phase_var / K_r
+        noise_fraction = np.clip(se_sq / (phase_mean**2 + se_sq + _EPS), 0.0, 1.0)
+        R = R - phase_mean * noise_fraction
 
     step_idx = np.arange(horizon) // P
     phase_idx = np.arange(horizon) % P
 
-    col_idx = rng.randint(0, K_r, size=(n_samples, m))
-    phase_noise = R[phase_idx[np.newaxis, :], col_idx[:, step_idx]]
+    # Scenario-coherent column sampling: one historical period per sample,
+    # reused across all forecast periods.  Numpy broadcasting turns the
+    # ``(n_samples,)`` column indices into full ``(n_samples, horizon)``
+    # phase noise via outer-style indexing.
+    col_idx_per_sample = rng.randint(0, K_r, size=n_samples)
+    phase_noise = R[phase_idx[np.newaxis, :], col_idx_per_sample[:, np.newaxis]]
     return phase_noise, step_idx, phase_idx
 
 
@@ -524,42 +568,76 @@ def _assemble_and_calibrate(
     phase_idx: NDArray[np.intp],
     y_arr: NDArray[np.floating],
     y_shift: float,
-    P: int,
+    P: int,  # noqa: ARG001  # kept for signature stability
     horizon: int,
     nu: int,
 ) -> NDArray[np.floating]:
     """Combine Level × Shape × (1 + phase_noise), clip, and shrink intervals.
 
-    Three post-processing steps:
+    Four post-processing steps:
 
     1. Multiplicative assembly with the per-block Shape vector and the
        sampled phase noise; subtract the location shift.
-    2. Clip to a recent-history window so that inverse Box-Cox blow-ups
-       don't propagate into the final samples.
-    3. Post-hoc Student-t shrinkage toward the median (only when
-       ``ν < 50``) to remove the heavy-tail variance inflation while
-       preserving the median exactly — a monotone, centered transform.
+    2. Clip to the historical support: recent-window range with a hard
+       lower cap at the global observed minimum, so samples never
+       extrapolate below observed data.  The recent-window range floor
+       is ``_EPS_SHAPE`` (scale-free), which pins near-constant tails to
+       their historical value instead of inheriting a spurious ±1 margin.
+    3. Integer snap: if the observed series is strictly integer-valued
+       (count data), round samples to the nearest integer so the
+       predictive distribution lives in the same ambient space as the
+       observations.
+    4. Post-hoc Student-t shrinkage toward the median (only when
+       ``_LEVEL_NOISE_MODE == "t"`` and ``ν < 50``) to remove the
+       heavy-tail variance inflation while preserving the median
+       exactly — a monotone, centered transform.  Not applied under
+       the empirical bootstrap noise model because bootstrap samples
+       already have unit variance by construction.
     """
     S_h = S_forecast[step_idx, phase_idx]
     samples = L_hat_all[:, step_idx] * S_h[np.newaxis, :] * (1 + phase_noise) - y_shift
 
-    # Clip to recent-history range.  Inverse Box-Cox combined with
-    # recursive Student-t simulation can produce extreme values; the
-    # window matches the P=1 fallback's ±10σ idea.
-    tail = y_arr[-min(horizon * 2, max(50, P * 3)) :]
-    y_lo, y_hi = float(np.nanmin(tail)), float(np.nanmax(tail))
-    y_range = max(y_hi - y_lo, max(abs(y_hi), abs(y_lo), 1.0))
-    samples = np.clip(samples, y_lo - y_range, y_hi + y_range)
+    # Clip to historical support.  The lower bound is the global
+    # observed minimum ``y_floor`` — a physical constraint that
+    # prevents negative forecasts on non-negative series.  The upper
+    # bound is the recent-window maximum plus one range, preventing
+    # unbounded extrapolation from Box-Cox inverse overflow.  No
+    # symmetric lower-range clip is applied: the bootstrap predictive
+    # distribution's lower tail is preserved so quantile calibration
+    # is not distorted by truncation.
+    lookback = min(max(horizon * 2, _PHASE_NOISE_K), len(y_arr))
+    rec = y_arr[-lookback:]
+    valid_rec = rec[~np.isnan(rec)]
+    valid_all = y_arr[~np.isnan(y_arr)]
+    if len(valid_rec) > 0 and len(valid_all) > 0:
+        y_hi = float(valid_rec.max())
+        y_range = max(y_hi - float(valid_rec.min()), _EPS_SHAPE)
+        y_floor = float(valid_all.min())
+        samples = np.clip(samples, y_floor, y_hi + y_range)
 
-    # Post-hoc Student-t shrinkage to undo heavy-tail interval inflation
-    # (`sqrt(ν / (ν−2))` ≈ 1.73× at ν = 3).  The transform is monotone
-    # and centered on the median, so the point forecast is preserved.
-    if nu < 50:
+    # Integer snap for strictly integer-valued observations (count data).
+    # Observations and forecasts must live in the same ambient space.
+    if len(valid_all) > 0 and np.all(valid_all == np.round(valid_all)):
+        samples = np.round(samples)
+
+    # Post-hoc Student-t shrinkage — only meaningful for the parametric
+    # Student-t noise mode.  Empirical bootstrap samples already have
+    # unit variance by construction, so no shrinkage is needed.
+    if _LEVEL_NOISE_MODE == "t" and nu < 50:
         shrink = np.sqrt(max(nu - 2.0, 0.5) / nu)
         med = np.median(samples, axis=0, keepdims=True)
         samples = med + shrink * (samples - med)
 
-    return np.asarray(np.nan_to_num(samples, posinf=0.0, neginf=0.0), dtype=np.float64)
+    # Map residual NaN/inf to the clip bounds rather than zero so
+    # overflow samples stay at the edge of historical support.
+    if len(valid_rec) > 0:
+        clip_hi = float(y_hi + y_range) if len(valid_rec) > 0 else 0.0
+    else:
+        clip_hi = 0.0
+    return np.asarray(
+        np.nan_to_num(samples, nan=0.0, posinf=clip_hi, neginf=0.0),
+        dtype=np.float64,
+    )
 
 
 # ── Public orchestrator ────────────────────────────────────────────────
@@ -637,15 +715,36 @@ def forecast(
     n = len(y)
 
     # 3. MDL period selection (with fallback to P=1 / Gaussian for very short series)
-    P, secondary, period, _cal = _select_period(y, n, freq)
+    P, secondary, period, _cal, svd_s, nc_svd = _select_period(y, n, freq)
     n_complete = n // P
     if n_complete < _MIN_COMPLETE:
         if P > 1:
             P = 1
             secondary = []
             n_complete = n
+            svd_s = np.zeros(1)  # invalidate stale SVD from discarded P
         if n_complete < _MIN_COMPLETE:
             return _degenerate_p1_fallback(y, horizon, n_samples, n, y_shift, rng)
+
+    # 3a. Dynamic Ridge DoF guard.  The Level Ridge LOOCV is stable when
+    #     max leverage ``h_ii ≤ 0.5``, which requires ``n_train ≥ 2p``
+    #     where ``p`` is the number of Ridge features (intercept + trend +
+    #     lag-1 + optional cross-period lag).  When the period-folded
+    #     matrix has fewer complete periods, the LOOCV residuals are
+    #     dominated by leverage and the predictive intervals blow up.
+    #     We compute the feature count from the already-known secondary
+    #     period list and fall back to P=1 if the bound is not met.
+    if P > 1:
+        _, max_cp_est = _compute_cross_periods(
+            secondary, P, period, n_complete
+        )
+        start_est = max(1, max_cp_est) if max_cp_est >= 2 else 1
+        nf_est = 2 + 1 + (1 if max_cp_est >= 2 else 0) + n_exog
+        if n_complete - start_est < 2 * nf_est:
+            P = 1
+            secondary = []
+            n_complete = n
+            svd_s = np.zeros(1)  # invalidate stale SVD from discarded P
 
     # 4. Cap to MAX_COMPLETE periods (memory / runtime guard)
     if n_complete > _MAX_COMPLETE:
@@ -660,6 +759,15 @@ def forecast(
     y_trim = y[-usable:]
     mat = y_trim.reshape(n_complete, P).T
     L = mat.sum(axis=0)
+
+    # 5a. Gavish-Donoho 2014 optimal Frobenius shrinkage of the rank-1
+    #     singular value, reusing the SVD that BIC period selection
+    #     already computed ("One SVD" principle).  L is collinear with
+    #     σ₁v₁, so the scalar shrinkage factor applies directly.
+    #     L_raw is kept for phase-noise residuals (Finding 3: using the
+    #     shrunk L would bias the residual matrix positive).
+    L_raw = L.copy()
+    L = L * _optshrink_factor(svd_s, P, nc_svd if nc_svd > 0 else n_complete)
 
     # 6. Estimate Shape (Dirichlet-Multinomial EB) — also returns m = ⌈h/P⌉
     S_forecast, S_hist, m = _estimate_shape(mat, n_complete, P, secondary, L, horizon)
@@ -750,10 +858,21 @@ def forecast(
         forecast_pos = (n_complete + np.arange(m)) % cp_main
         L_hat_all = L_hat_all * S2[forecast_pos][np.newaxis, :]
 
-    # 17. Phase-noise sampling (scenario-coherent column sampling)
+    # 17. Phase-noise sampling (scenario-coherent column sampling).
+    #     Uses L_raw (pre-shrinkage) so the residual matrix E = mat − L·S
+    #     is unbiased; the shrunk L is for the Level Ridge only.
     phase_noise, step_idx, phase_idx = _phase_noise_sample(
-        mat, S_hist, L, n_complete, P, horizon, m, n_samples, rng
+        mat, S_hist, L_raw, n_complete, P, horizon, m, n_samples, rng
     )
+
+    # 17a. Horizon-adaptive phase-noise deflation.  The Level paths
+    #      already widen with horizon via ``sqrt(1 + h_test)``.  Phase
+    #      noise drawn at full historical magnitude compounds with this,
+    #      over-dispersing the tails.  Dividing by ``sqrt(1 + h_test)``
+    #      removes the double-counted variance so the total predictive
+    #      spread grows at the rate set by the LWCP leverages alone.
+    phase_deflate = 1.0 / np.sqrt(1.0 + h_test[step_idx])
+    phase_noise = phase_noise * phase_deflate[np.newaxis, :]
 
     # 18. Multiplicative assembly + clipping + post-hoc shrinkage
     return _assemble_and_calibrate(
