@@ -15,6 +15,7 @@ from flaircast import (
     _resolve_freq,
     _ridge_sa,
 )
+from flaircast._level import _mp_median, _optshrink_factor
 
 # ── _resolve_freq ───────────────────────────────────────────────────────
 
@@ -196,8 +197,6 @@ class TestComputeShape2:
 
 
 # ── Gavish-Donoho shrinkage tests ─────────────────────────────────────
-
-from flaircast._level import _mp_median, _optshrink_factor
 
 
 class TestMpMedian:

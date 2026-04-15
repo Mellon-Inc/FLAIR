@@ -499,7 +499,7 @@ def _phase_noise_sample(
     n_complete: int,
     P: int,
     horizon: int,
-    m: int,  # noqa: ARG001  # kept for API stability
+    m: int,  # kept for API stability
     n_samples: int,
     rng: np.random.RandomState,
 ) -> tuple[NDArray[np.floating], NDArray[np.intp], NDArray[np.intp]]:
@@ -568,7 +568,7 @@ def _assemble_and_calibrate(
     phase_idx: NDArray[np.intp],
     y_arr: NDArray[np.floating],
     y_shift: float,
-    P: int,  # noqa: ARG001  # kept for signature stability
+    P: int,  # kept for signature stability
     horizon: int,
     nu: int,
 ) -> NDArray[np.floating]:
@@ -630,10 +630,7 @@ def _assemble_and_calibrate(
 
     # Map residual NaN/inf to the clip bounds rather than zero so
     # overflow samples stay at the edge of historical support.
-    if len(valid_rec) > 0:
-        clip_hi = float(y_hi + y_range) if len(valid_rec) > 0 else 0.0
-    else:
-        clip_hi = 0.0
+    clip_hi = float(y_hi + y_range) if len(valid_rec) > 0 else 0.0
     return np.asarray(
         np.nan_to_num(samples, nan=0.0, posinf=clip_hi, neginf=0.0),
         dtype=np.float64,

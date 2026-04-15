@@ -87,8 +87,8 @@ def _estimate_shape(
     mat: NDArray[np.floating],
     n_complete: int,
     P: int,
-    secondary: list[int],  # noqa: ARG001  # retained for API stability
-    L: NDArray[np.floating],  # noqa: ARG001
+    secondary: list[int],  # retained for API stability
+    L: NDArray[np.floating],  # retained for API stability
     horizon: int,
 ) -> tuple[NDArray[np.floating], NDArray[np.floating], int]:
     """Frozen Shape: global average of within-period proportions.
