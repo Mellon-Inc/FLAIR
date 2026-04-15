@@ -12,8 +12,8 @@
 
 Zero hyperparameters. One SVD. CPU only.
 
-- **#1 on [Chronos Benchmark II](https://github.com/amazon-science/chronos-forecasting)** (25 zero-shot datasets). Agg. Rel. MASE **0.696** vs. Chronos-Bolt-Base 0.791 (205M params, GPU)
-- **Best statistical method on [GIFT-Eval](https://huggingface.co/spaces/Salesforce/GIFT-Eval)** (97 configs, 23 datasets). relMASE **0.857**, relCRPS **0.610**
+- **#1 on [Chronos Benchmark II](https://github.com/amazon-science/chronos-forecasting)** (25 zero-shot datasets). Agg. Rel. MASE **0.678**, Rel. WQL **0.716** — beats AutoARIMA (0.742) by 3.5%
+- **Matches PatchTST on [GIFT-Eval](https://huggingface.co/spaces/Salesforce/GIFT-Eval)** (97 configs, 23 datasets). relMASE **0.838** (beats PatchTST 0.849), relCRPS **0.587** (ties PatchTST)
 - **~1000 lines of pure NumPy/SciPy**. No deep learning, no foundation models, no GPU.
 
 ## Table of Contents
@@ -91,31 +91,34 @@ pip install .
 
 | Freq string | Period | Meaning | MDL candidates |
 |:-----------:|:------:|---------|:--------------:|
+| Freq string | Period | Meaning | MDL candidates |
+|:-----------:|:------:|---------|:--------------:|
 | `S` | 60 | Second | 60 |
-| `T` | 60 | Minute | 60 |
+| `T` / `min` | 60 | Minute | 60 |
 | `5T` | 12 | 5-minute | 12, 288 |
 | `10T` | 6 | 10-minute | 6, 144 |
 | `15T` | 4 | 15-minute | 4, 96 |
+| `30T` / `30min` | 48 | 30-minute | 48, 336 |
 | `10S` | 6 | 10-second | 6, 360 |
-| `H` | 24 | Hourly | 24, 168 |
+| `H` / `h` | 24 | Hourly | 24, 168 |
 | `D` | 7 | Daily | 7, 365 |
 | `W` | 52 | Weekly | 52 |
-| `M` | 12 | Monthly | 12 |
-| `Q` | 4 | Quarterly | 4 |
-| `A` / `Y` | 1 | Annual | — |
+| `M` / `ME` / `MS` | 12 | Monthly | 12 |
+| `Q` / `QE` / `QS` | 4 | Quarterly | 4 |
+| `A` / `Y` / `YE` | 1 | Annual | — |
 
-When multiple candidates exist, FLAIR uses BIC on the SVD spectrum (MDL principle) to select the period that best supports a rank-1 structure.
+BIC on the SVD spectrum selects the period that best supports a rank-1 structure. A P=1 null model (mean + noise) competes with every periodic candidate under the same BIC, so FLAIR rejects periodicity when the rank-1 fit does not justify the extra Shape parameters.
 
 ## How It Works
 
-1. **MDL Period Selection**: BIC on SVD spectrum selects the primary period P from calendar candidates
-2. **Reshape** the series into a (P × n_complete) matrix
-3. **Shape₁** = Dirichlet posterior mean per context (`context = period_index % C`). Shrinks toward the global average when data is scarce
-4. **Level** = period totals
+1. **MDL Period Selection**: BIC on SVD spectrum selects the primary period P from calendar candidates. A P=1 null model (mean + noise) tests whether periodicity exists at all
+2. **Reshape** the series into a (P × n_complete) matrix. Dynamic DoF guard (n_train >= 2p) ensures the Ridge fit is stable
+3. **Shape** = frozen global average of within-period proportions from the last K=2 periods
+4. **Level** = period totals, denoised by Gavish-Donoho 2014 optimal Frobenius shrinkage (reuses the BIC SVD, no extra matrix decomposition)
 5. **Shape₂** = secondary periodic pattern in Level, estimated as `w × raw + (1−w) × prior`, where `w = nc₂/(nc₂+cp)`. The prior is selected by BIC: first harmonic (2 params) when justified, flat (0 params) otherwise. Level is deseasonalized by dividing by Shape₂
-6. **Ridge** on deseasonalized Level: Box-Cox → NLinear → intercept + trend + lags → soft-average GCV
-7. **Stochastic Level paths**: LOO residuals are injected into the recursive forecast. Errors propagate through the Ridge lag dynamics naturally. Mean-reverting series saturate; random-walk series grow as √step. No scaling formula needed
-8. **Phase noise** from SVD Residual Quantiles: E = M − fitted gives phase-specific relative noise. Sampled scenario-coherently: all phases within the same forecast step share one historical period's residual pattern, preserving cross-phase correlation. Combined with Level paths: `sample = Level_path × Shape₁ × (1 + phase_noise)`
+6. **Ridge** on deseasonalized Level: Box-Cox → prior-centered reparameterization (random-walk prior) → intercept + trend + lags → LOOCV soft-average
+7. **Stochastic Level paths**: bootstrap of LOOCV residuals, scaled by LWCP leverages per horizon step
+8. **Phase noise**: scenario-coherent column sampling from the rank-1 residual matrix, with James-Stein per-phase bias shrinkage and horizon-adaptive deflation. Combined with Level paths: `sample = Level_path × Shape × (1 + phase_noise)`
 
 ## Benchmark Results
 
@@ -127,22 +130,16 @@ Evaluated on the [Chronos](https://github.com/amazon-science/chronos-forecasting
   <img src="assets/fig_chronos.png" alt="Chronos Benchmark" width="85%">
 </p>
 
-| Rank | Model | Params | Agg. Rel. MASE | GPU |
-|:----:|-------|--------|:--------------:|:---:|
-| **1** | **FLAIR** | **~6** | **0.696** | **No** |
-| 2 | Chronos-Bolt-Base | 205M | 0.791 | Yes |
-| 3 | Moirai-Base | 311M | 0.812 | Yes |
-| 4 | Chronos-T5-Base | 200M | 0.816 | Yes |
-| 5 | Chronos-Bolt-Small | 48M | 0.819 | Yes |
-| 6 | Chronos-T5-Large | 710M | 0.821 | Yes |
-| 7 | Chronos-T5-Small | 46M | 0.830 | Yes |
-| 8 | AutoARIMA | — | 0.865 | No |
-| 9 | Chronos-T5-Tiny | 8M | 0.870 | Yes |
-| 10 | TimesFM | 200M | 0.879 | Yes |
-| 11 | AutoETS | — | 0.937 | No |
-| 12 | Seasonal Naive | — | 1.000 | No |
+| Rank | Model | Params | Agg. Rel. MASE | Agg. Rel. WQL | GPU |
+|:----:|-------|--------|:--------------:|:-------------:|:---:|
+| **1** | **FLAIR** | **~6** | **0.678** | **0.716** | **No** |
+| 2 | Chronos-Bolt-Base | 205M | 0.791 | — | Yes |
+| 3 | Moirai-Base | 311M | 0.812 | — | Yes |
+| 4 | AutoARIMA | — | 0.865 | 0.742 | No |
+| 5 | Chronos-T5-Small | 46M | 0.830 | — | Yes |
+| 6 | Seasonal Naive | — | 1.000 | 1.000 | No |
 
-Baseline results from [autogluon/fev](https://github.com/autogluon/fev) and [amazon-science/chronos-forecasting](https://github.com/amazon-science/chronos-forecasting). FLAIR outperforms Chronos-T5-Small (46M params) on **14 of 25 datasets** in point forecast accuracy.
+Baseline results from [autogluon/fev](https://github.com/autogluon/fev) and [amazon-science/chronos-forecasting](https://github.com/amazon-science/chronos-forecasting).
 
 ### GIFT-Eval (97 configs, 23 datasets)
 
@@ -154,7 +151,8 @@ Baseline results from [autogluon/fev](https://github.com/autogluon/fev) and [ama
 
 | Model | Type | relMASE | relCRPS | GPU |
 |-------|------|:-------:|:-------:|:---:|
-| **FLAIR** | **Statistical** | **0.857** | **0.610** | **No** |
+| Chronos-Bolt-Base | Foundation | 0.808 | 0.574 | Yes |
+| **FLAIR** | **Statistical** | **0.838** | **0.587** | **No** |
 | PatchTST | Deep Learning | 0.849 | 0.587 | Yes |
 | Moirai-large | Foundation | 0.875 | 0.599 | Yes |
 | iTransformer | Deep Learning | 0.893 | 0.620 | Yes |
@@ -162,7 +160,6 @@ Baseline results from [autogluon/fev](https://github.com/autogluon/fev) and [ama
 | N-BEATS | Deep Learning | 0.938 | 0.816 | Yes |
 | SeasonalNaive | Baseline | 1.000 | 1.000 | No |
 | AutoARIMA | Statistical | 1.074 | 0.912 | No |
-| Prophet | Statistical | 1.540 | 1.061 | No |
 
 ### Long-term Forecasting (8 datasets)
 
@@ -189,7 +186,7 @@ Three compressions act simultaneously:
 
 1. **Noise reduction**: summing P phases into one Level value reduces noise by ~√P
 2. **Horizon compression**: forecasting Level requires only ⌈H/P⌉ steps instead of H, reducing error accumulation
-3. **Shape is fixed**: Shape is a Dirichlet posterior, not a learned parameter, so it does not overfit
+3. **Shape is frozen**: Shape is a structural average, not a learned parameter, so it does not overfit
 
 ## API Reference
 
@@ -262,10 +259,12 @@ FLAIR applies the **Minimum Description Length** principle at every scale:
 
 | Scale | Mechanism | MDL Role |
 |-------|-----------|----------|
-| Period P | BIC on SVD spectrum | Select simplest rank-1 structure |
-| Shape₁ | Dirichlet shrinkage | Shrink to global average (simplest distribution) |
+| Period P | BIC on SVD spectrum + P=1 null | Select simplest rank-1 structure or reject periodicity |
+| Rank-1 σ₁ | Gavish-Donoho shrinkage | Minimax-optimal denoising of the leading singular value |
+| Shape | Frozen K-period average | Structural (not learned), cannot overfit |
 | Shape₂ | BIC-gated shrinkage | BIC selects prior: harmonic (2 params) vs flat (0 params) |
-| Ridge α | GCV soft-average | Select model complexity via cross-validation |
+| Ridge α | LOOCV soft-average | Select model complexity via cross-validation |
+| DoF guard | n_train >= 2p | Ensures LOOCV leverage stability |
 
 ## Limitations
 
