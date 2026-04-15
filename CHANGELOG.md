@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.6.0 (2026-04-15)
+
+- **Unified BIC with P=1 null model**: period selection now evaluates a P=1 null (mean + noise, 1 parameter) alongside all periodic candidates under a single BIC formula. Periodicity is rejected when the rank-1 fit does not justify the extra Shape parameters. GIFT-Eval relMASE 0.857 → 0.838, relCRPS 0.610 → 0.587.
+- **Gavish-Donoho optimal Frobenius shrinkage**: the rank-1 Level is denoised by the minimax-optimal shrinker (Corollary 1, Gavish-Donoho 2014 / SIAM 2017 eq. 3.2), reusing the SVD that BIC already computes. Zero additional matrix decompositions.
+- **Dynamic Ridge DoF guard**: LOOCV leverage bound `n_train >= 2p` prevents unstable fits on short series, where `p` is the number of Ridge features including exogenous columns.
+- **Horizon-adaptive phase-noise deflation**: phase noise is scaled by `1/sqrt(1+h_test)` to avoid double-counting variance with the LWCP-widened Level paths.
+- **James-Stein per-phase bias shrinkage**: removes noise-dominated per-phase offsets in the SVD residual matrix via posterior-mean shrinkage toward zero.
+- **Empirical bootstrap for Level noise**: LOOCV residuals are resampled with replacement (preserving empirical skew/kurtosis) instead of parametric Student-t when the residual pool has >= 4 observations.
+- **Frozen Shape** (Dirichlet-Multinomial removal): Shape estimation simplified to the global K-period average. The Dirichlet context-conditioning path was removed after the 97-config ablation showed it was marginally harmful.
+- Fix: pandas 2.2+ frequency aliases (ME, QE, YE, MS, QS, AS) and anchored forms (QE-DEC) now resolve correctly.
+- Fix: add 30-minute period table entry (P=48 daily, 336 weekly).
+- Fix: bootstrap variance uses `Var(loo_resid)` instead of `E[r^2]` for mean-subtracted unit residuals.
+- Fix: `_bc_inv` overflow guard for `lam > 0` (clips base before exponentiation).
+- Fix: lower clip uses physical floor (`y_floor`) only; symmetric range clip removed to preserve lower-quantile calibration.
+- Refactor: `_select_period` returns SVD singular values + nc for downstream OptShrink reuse.
+- Refactor: switch BIC SVD from `numpy.linalg.svd` to `scipy.linalg.svdvals` (840x faster on fat matrices).
+- Refactor: decompose `forecast()` into 14 paper-aligned helper functions across submodules.
+
 ## 0.5.0 (2026-04-11)
 
 - **Exogenous variable support**: `forecast()` and `FLAIR.predict()` now accept `X_hist` / `X_future` parameters. Standardized exog columns are appended directly to the Level Ridge feature matrix; the LOOCV soft-averaged Ridge handles regularization, so no separate gating step is required ("One Ridge" preserved). When `X_hist=None` the result is bit-identical to the previous behavior.
