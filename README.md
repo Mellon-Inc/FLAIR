@@ -149,17 +149,23 @@ Baseline results from [autogluon/fev](https://github.com/autogluon/fev) and [ama
   <img src="assets/fig_benchmark.png" alt="GIFT-Eval Benchmark" width="100%">
 </p>
 
-| Model | Type | relMASE | relCRPS | GPU |
-|-------|------|:-------:|:-------:|:---:|
-| Chronos-Bolt-Base | Foundation | 0.808 | 0.574 | Yes |
-| **FLAIR** | **Statistical** | **0.838** | **0.587** | **No** |
-| PatchTST | Deep Learning | 0.849 | 0.587 | Yes |
-| Moirai-large | Foundation | 0.875 | 0.599 | Yes |
-| iTransformer | Deep Learning | 0.893 | 0.620 | Yes |
-| TFT | Deep Learning | 0.915 | 0.605 | Yes |
-| N-BEATS | Deep Learning | 0.938 | 0.816 | Yes |
-| SeasonalNaive | Baseline | 1.000 | 1.000 | No |
-| AutoARIMA | Statistical | 1.074 | 0.912 | No |
+| Model | Type | relMASE | relCRPS | Params | GPU |
+|-------|------|:-------:|:-------:|:------:|:---:|
+| Chronos-Bolt-Base | Foundation | 0.808 | 0.574 | 205M | Yes |
+| **FLAIR** | **Statistical** | **0.838** | **0.587** | **~6** | **No** |
+| PatchTST | Deep Learning | 0.849 | 0.587 | ~1M | Yes |
+| Chronos-Large | Foundation | 0.870 | 0.647 | 710M | Yes |
+| Moirai-Large | Foundation | 0.875 | 0.599 | 311M | Yes |
+| Chronos-Small | Foundation | 0.892 | 0.663 | 46M | Yes |
+| iTransformer | Deep Learning | 0.893 | 0.620 | ~5M | Yes |
+| TFT | Deep Learning | 0.915 | 0.605 | ~10M | Yes |
+| N-BEATS | Deep Learning | 0.938 | 0.816 | ~10M | Yes |
+| Seasonal Naive | Baseline | 1.000 | 1.000 | 0 | No |
+| DLinear | Deep Learning | 1.061 | 0.846 | ~0.1M | Yes |
+| AutoARIMA | Statistical | 1.074 | 0.912 | ~5 | No |
+| AutoTheta | Statistical | 1.090 | 1.244 | ~5 | No |
+| DeepAR | Deep Learning | 1.343 | 0.853 | ~10M | Yes |
+| Prophet | Statistical | 1.540 | 1.061 | ~20 | No |
 
 ### Long-term Forecasting (8 datasets)
 
