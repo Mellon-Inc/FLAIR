@@ -91,8 +91,6 @@ pip install .
 
 | Freq string | Period | Meaning | MDL candidates |
 |:-----------:|:------:|---------|:--------------:|
-| Freq string | Period | Meaning | MDL candidates |
-|:-----------:|:------:|---------|:--------------:|
 | `S` | 60 | Second | 60 |
 | `T` / `min` | 60 | Minute | 60 |
 | `5T` | 12 | 5-minute | 12, 288 |
