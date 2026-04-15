@@ -130,7 +130,7 @@ Evaluated on the [Chronos](https://github.com/amazon-science/chronos-forecasting
 
 | Rank | Model | Params | Agg. Rel. MASE | Agg. Rel. WQL | GPU |
 |:----:|-------|--------|:--------------:|:-------------:|:---:|
-| **1** | **FLAIR** | **~6** | **0.678** | **0.716** | **No** |
+| **1** | **FLAIR** | **0 HP** | **0.678** | **0.716** | **No** |
 | 2 | Chronos-Bolt-Base | 205M | 0.791 | — | Yes |
 | 3 | Moirai-Base | 311M | 0.812 | — | Yes |
 | 4 | AutoARIMA | — | 0.865 | 0.742 | No |
@@ -150,7 +150,7 @@ Baseline results from [autogluon/fev](https://github.com/autogluon/fev) and [ama
 | Model | Type | relMASE | relCRPS | Params | GPU |
 |-------|------|:-------:|:-------:|:------:|:---:|
 | Chronos-Bolt-Base | Foundation | 0.808 | 0.574 | 205M | Yes |
-| **FLAIR** | **Statistical** | **0.838** | **0.587** | **~6** | **No** |
+| **FLAIR** | **Statistical** | **0.838** | **0.587** | **0 HP** | **No** |
 | PatchTST | Deep Learning | 0.849 | 0.587 | ~1M | Yes |
 | Chronos-Large | Foundation | 0.870 | 0.647 | 710M | Yes |
 | Moirai-Large | Foundation | 0.875 | 0.599 | 311M | Yes |
