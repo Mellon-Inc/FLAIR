@@ -154,6 +154,7 @@ Baseline results from [autogluon/fev](https://github.com/autogluon/fev) and [ama
 | PatchTST | Deep Learning | 0.849 | 0.587 | ~1M | Yes |
 | Chronos-Large | Foundation | 0.870 | 0.647 | 710M | Yes |
 | Moirai-Large | Foundation | 0.875 | 0.599 | 311M | Yes |
+| TimesFM | Foundation | 0.889 | 0.635 | 200M | Yes |
 | Chronos-Small | Foundation | 0.892 | 0.663 | 46M | Yes |
 | iTransformer | Deep Learning | 0.893 | 0.620 | ~5M | Yes |
 | TFT | Deep Learning | 0.915 | 0.605 | ~10M | Yes |
