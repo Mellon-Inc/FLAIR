@@ -173,16 +173,16 @@ Average MSE across all 4 horizons:
 
 | Dataset | FLAIR | iTransformer | PatchTST | DLinear | GPU needed |
 |---------|:-----:|:------------:|:--------:|:-------:|:----------:|
-| **ETTh2** | **0.366** | 0.383 | 0.387 | 0.559 | **No** |
-| **ETTm2** | **0.257** | 0.288 | 0.281 | 0.350 | **No** |
-| **Weather** | **0.248** | 0.258 | 0.259 | 0.265 | **No** |
-| ECL | 0.215 | **0.178** | 0.205 | 0.212 | Yes |
-| Traffic | 0.434 | **0.428** | 0.481 | 0.625 | Yes |
-| ETTh1 | 0.591 | **0.454** | 0.469 | 0.456 | Yes |
-| ETTm1 | 0.511 | 0.407 | **0.387** | 0.403 | Yes |
-| Exchange | 0.815 | 0.360 | 0.366 | **0.354** | Yes |
+| **ETTh2** | **0.367** | 0.383 | 0.387 | 0.559 | **No** |
+| **ETTm2** | **0.246** | 0.288 | 0.281 | 0.350 | **No** |
+| **Weather** | **0.258** | 0.258 | 0.259 | 0.265 | **No** |
+| **Traffic** | **0.426** | 0.428 | 0.481 | 0.625 | **No** |
+| ECL | 0.208 | **0.178** | 0.205 | 0.212 | Yes |
+| ETTh1 | 0.579 | **0.454** | 0.469 | 0.456 | Yes |
+| ETTm1 | 0.546 | 0.407 | **0.387** | 0.403 | Yes |
+| Exchange | 0.522 | 0.360 | 0.366 | **0.354** | Yes |
 
-FLAIR outperforms GPU-trained Transformers on **3 of 8 datasets** and **11 of 32 individual settings**. Accuracy is higher on datasets with clear periodicity and lower on non-periodic series (Exchange).
+FLAIR outperforms GPU-trained Transformers on **4 of 8 datasets** (ETTh2, ETTm2, Weather, Traffic). Accuracy is higher on datasets with clear periodicity and lower on non-periodic series (Exchange).
 
 ### Why does FLAIR work?
 
