@@ -238,6 +238,7 @@ class TestOptShrinkFactor:
         mat = rng.randn(12, 50)
         mat += np.outer(rng.randn(12) * 5, np.ones(50))  # add rank-1
         from scipy.linalg import svdvals
+
         s = svdvals(mat)
         f = _optshrink_factor(s, P=12, n_complete=50)
         assert 0 < f <= 1.0

@@ -64,8 +64,15 @@ def _resolve_freq(freq: str) -> str:
         f = f.split("-")[0]
     # 2. Strip pandas 2.2+ end/start-of-period suffixes:
     #    "ME" → "M", "QE" → "Q", "MS" → "M", etc.
-    for suffix, base in (("ME", "M"), ("QE", "Q"), ("YE", "Y"),
-                         ("MS", "M"), ("QS", "Q"), ("YS", "Y"), ("AS", "A")):
+    for suffix, base in (
+        ("ME", "M"),
+        ("QE", "Q"),
+        ("YE", "Y"),
+        ("MS", "M"),
+        ("QS", "Q"),
+        ("YS", "Y"),
+        ("AS", "A"),
+    ):
         if f == suffix:
             return base
         if len(f) > len(suffix) and f.endswith(suffix):

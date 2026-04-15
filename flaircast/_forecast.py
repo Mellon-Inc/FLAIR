@@ -465,9 +465,9 @@ def _sample_level_paths(
         # Var = Var(loo_resid) × (1 + h_test), not E[r²] × (1 + h_test).
         sigma2_loo = float(np.var(loo_resid))
         flat = rng.choice(loo_unit, size=n_samples * m, replace=True)
-        noise_pool = flat.reshape(n_samples, m) * np.sqrt(
-            sigma2_loo * (1.0 + h_test)
-        )[np.newaxis, :]
+        noise_pool = (
+            flat.reshape(n_samples, m) * np.sqrt(sigma2_loo * (1.0 + h_test))[np.newaxis, :]
+        )
     else:
         sigma2_loo = float(np.mean(loo_resid**2))
         noise_pool = (
@@ -732,9 +732,7 @@ def forecast(
     #     We compute the feature count from the already-known secondary
     #     period list and fall back to P=1 if the bound is not met.
     if P > 1:
-        _, max_cp_est = _compute_cross_periods(
-            secondary, P, period, n_complete
-        )
+        _, max_cp_est = _compute_cross_periods(secondary, P, period, n_complete)
         start_est = max(1, max_cp_est) if max_cp_est >= 2 else 1
         nf_est = 2 + 1 + (1 if max_cp_est >= 2 else 0) + n_exog
         if n_complete - start_est < 2 * nf_est:
