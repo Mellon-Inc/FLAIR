@@ -214,7 +214,7 @@ def _mp_median(beta: float) -> float:
 
     def cdf_minus_half(m: float) -> float:
         c, _ = quad(density, y_minus, m, limit=100)
-        return c - 0.5
+        return float(c) - 0.5
 
     result: float = float(brentq(cdf_minus_half, y_minus + _EPS, y_plus - _EPS, xtol=1e-8))
     return result
