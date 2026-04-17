@@ -2,6 +2,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/flaircast)](https://pypi.org/project/flaircast/)
 [![Python](https://img.shields.io/pypi/pyversions/flaircast)](https://pypi.org/project/flaircast/)
+<a href="https://pepy.tech/projects/flaircast"><img src="https://static.pepy.tech/personalized-badge/flaircast?period=total&units=INTERNATIONAL_SYSTEM&left_color=GRAY&right_color=RED&left_text=downloads" alt="PyPI Downloads"></a>
 [![CI](https://github.com/TakatoHonda/FLAIR/actions/workflows/ci.yml/badge.svg)](https://github.com/TakatoHonda/FLAIR/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/TakatoHonda/FLAIR)](LICENSE)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TakatoHonda/FLAIR/blob/main/examples/quickstart.ipynb)
