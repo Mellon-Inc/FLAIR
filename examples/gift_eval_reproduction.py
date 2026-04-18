@@ -13,12 +13,15 @@ Usage:
     python examples/gift_eval_reproduction.py --data-dir /path/to/gift-eval-data
 
 Output:
-    results/gift_eval_flair.csv — per-configuration MASE and CRPS
-    Final line prints the aggregate relMASE and relCRPS (geometric mean
-    relative to Seasonal Naive).
+    results/gift_eval_flair.csv — per-configuration MASE and CRPS.
+    The final block prints:
+      * MASE_gm / CRPS_gm : geometric mean of raw per-config metrics
+      * relMASE / relCRPS : geometric mean of (model_metric / SN_metric),
+        using the Seasonal Naive baseline fetched from the gift-eval
+        repo (results/seasonal_naive/all_results.csv).
 
 Expected results (flaircast v0.6.0, N_SAMPLES=200):
-    relMASE = 0.838, relCRPS = 0.587
+    relMASE = 0.8384, relCRPS = 0.5871
 """
 
 import argparse
@@ -240,9 +243,38 @@ def main():
 
     if len(df) > 0:
         gm = lambda x: float(np.exp(np.log(np.clip(x, 1e-10, None)).mean()))
-        print(f"\nAggregate (geometric mean):")
-        print(f"  relMASE = {gm(df.mase):.4f}")
-        print(f"  relCRPS = {gm(df.crps):.4f}")
+        print(f"\nAggregate (geometric mean of raw metrics):")
+        print(f"  MASE_gm = {gm(df.mase):.4f}")
+        print(f"  CRPS_gm = {gm(df.crps):.4f}")
+
+        # Fetch Seasonal Naive baseline from gift-eval repo for relMASE/relCRPS.
+        # relMASE/relCRPS = geometric mean of per-config (model_metric / sn_metric).
+        SN_URL = (
+            "https://raw.githubusercontent.com/SalesforceAIResearch/"
+            "gift-eval/main/results/seasonal_naive/all_results.csv"
+        )
+        try:
+            sn = pd.read_csv(SN_URL)
+            sn_m = dict(zip(sn["dataset"], sn["eval_metrics/MASE[0.5]"]))
+            sn_c = dict(
+                zip(sn["dataset"], sn["eval_metrics/mean_weighted_sum_quantile_loss"])
+            )
+            df["rel_mase"] = df["mase"] / df["config"].map(sn_m)
+            df["rel_crps"] = df["crps"] / df["config"].map(sn_c)
+            n_ok = df[["rel_mase", "rel_crps"]].notna().all(axis=1).sum()
+            print(
+                f"\nAggregate normalized by Seasonal Naive "
+                f"(matched {n_ok}/{len(df)} configs):"
+            )
+            print(f"  relMASE = {gm(df.rel_mase.dropna()):.4f}")
+            print(f"  relCRPS = {gm(df.rel_crps.dropna()):.4f}")
+        except Exception as e:
+            print(f"\n[warn] could not fetch Seasonal Naive baseline: {e}")
+            print(
+                "       relMASE/relCRPS require dividing each row by "
+                "gift-eval/results/seasonal_naive/all_results.csv, "
+                "then taking the geometric mean."
+            )
 
 
 if __name__ == "__main__":
