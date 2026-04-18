@@ -136,12 +136,14 @@ class TestRidgeSA:
     def test_identity_system(self):
         X = np.eye(5)
         y = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
-        beta, loo, gcv_min, Vt, s, d_avg = _ridge_sa(X, y)
+        beta, loo, gcv_min, Vt, s, d_avg, f_avg = _ridge_sa(X, y)
         assert beta.shape == (5,)
         assert loo.shape == (5,)
         assert isinstance(gcv_min, float)
         assert gcv_min >= 0
-        assert Vt.shape[0] == s.shape[0] == d_avg.shape[0]
+        assert Vt.shape[0] == s.shape[0] == d_avg.shape[0] == f_avg.shape[0]
+        # f_avg = soft-averaged 1/(s²+α); must be positive and finite
+        assert np.all(np.isfinite(f_avg)) and np.all(f_avg > 0)
 
     def test_simple_regression(self):
         rng = np.random.RandomState(42)

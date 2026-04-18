@@ -374,8 +374,7 @@ def _compute_lwcp_leverages(
     damped_trend: NDArray[np.floating],
     X_future_L_std: NDArray[np.floating] | None,
     Vt_r: NDArray[np.floating],
-    s_r: NDArray[np.floating],
-    d_avg_r: NDArray[np.floating],
+    f_avg_r: NDArray[np.floating],
     n_complete: int,
     m: int,
     nb: int,
@@ -385,6 +384,14 @@ def _compute_lwcp_leverages(
     n_train: int,
 ) -> NDArray[np.floating]:
     """Per-horizon LWCP leverages projected through the Ridge SVD.
+
+    Test-point Ridge leverage is ``x^T (X^T X + α I)^{-1} x``.  Using the
+    SVD decomposition ``X = U S V^T`` and averaging over the alpha grid
+    gives ``h_test = (V^T x)^2 @ f_avg`` where
+    ``f_avg[k] = Σ_i w_i / (s_k² + α_i)`` is returned directly by
+    :func:`_ridge_sa`.  This avoids the ``1/s`` cancellation (and the
+    ``max(s, ε)`` guard) that the earlier ``d_avg / s²`` formulation
+    required when the smallest singular value was numerically small.
 
     ``h_test[j]`` grows with horizon because the trend extrapolates and
     the lag features become themselves predicted values.  When exog is
@@ -415,8 +422,7 @@ def _compute_lwcp_leverages(
             x_j[nf:] = X_future_L_std[j]
 
         v = Vt_r @ x_j
-        u_test = v / np.maximum(s_r, _EPS)
-        h_test[j] = float(np.sum(u_test**2 * d_avg_r))
+        h_test[j] = float(np.sum(v * v * f_avg_r))
 
     return np.clip(h_test, 0.0, 10.0)
 
@@ -805,7 +811,7 @@ def forecast(
     )
 
     # 12. Single Ridge fit (LOOCV soft-average + LWCP normalization)
-    theta, loo_resid, _, Vt_r, s_r, d_avg_r = _ridge_sa(X_full, y_target)
+    theta, loo_resid, _, Vt_r, _s_r, _d_avg_r, f_avg_r = _ridge_sa(X_full, y_target)
     beta = _recover_beta(theta, is_diff, nb)
 
     # 13. Damped-trend extrapolation coefficients
@@ -818,8 +824,7 @@ def forecast(
         damped_trend,
         X_future_L_std,
         Vt_r,
-        s_r,
-        d_avg_r,
+        f_avg_r,
         n_complete,
         m,
         nb,
