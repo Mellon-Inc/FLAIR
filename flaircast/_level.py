@@ -83,7 +83,6 @@ def _ridge_sa(
     NDArray[np.floating],
     NDArray[np.floating],
     NDArray[np.floating],
-    NDArray[np.floating],
 ]:
     """Ridge regression with LOOCV soft-average over 25 log-spaced alphas.
 
@@ -109,10 +108,6 @@ def _ridge_sa(
     d_avg : ndarray, shape (rank,)
         Soft-averaged spectral filter `s² / (s² + α)`; its sum is the
         effective Ridge degrees of freedom `tr(H)`.
-    f_avg : ndarray, shape (rank,)
-        Soft-averaged inverse-ridge filter `1 / (s² + α)`.  Test-point
-        Ridge leverage for prediction row ``x`` is ``(V^T x)^2 @ f_avg``.
-        Numerically cleaner than ``d_avg / s²`` at small singular values.
     """
     U, s, Vt = np.linalg.svd(X, full_matrices=False)
     s2, Uty = s**2, U.T @ y
@@ -133,18 +128,15 @@ def _ridge_sa(
     w = np.exp(log_w)
     w /= w.sum()
 
-    # Weighted-average beta, hat-matrix diagonal, and inverse-ridge filter.
+    # Weighted-average beta and hat-matrix diagonal
     beta = np.zeros(X.shape[1])
     d_avg = np.zeros(len(s))
-    f_avg = np.zeros(len(s))
     for wi, a in zip(w, alphas):
         if wi < _EPS_WEIGHT:
             continue
-        inv = 1.0 / (s2 + a)
-        d = s2 * inv
+        d = s2 / (s2 + a)
         beta += wi * (Vt.T @ (d * Uty / np.maximum(s, _EPS)))
         d_avg += wi * d
-        f_avg += wi * inv
 
     # LWCP-normalized LOO residuals (see docstring above).
     residuals = y - X @ beta
@@ -152,7 +144,7 @@ def _ridge_sa(
     loo_raw = residuals / np.maximum(1 - h_avg, _EPS)
     loo = loo_raw / np.sqrt(np.maximum(1 + h_avg, _EPS))
 
-    return beta, loo, gcv_min, Vt, s, d_avg, f_avg
+    return beta, loo, gcv_min, Vt, s, d_avg
 
 
 # ── Gavish-Donoho 2014 optimal Frobenius shrinkage ─────────────────────
@@ -239,21 +231,13 @@ def _estimate_phi(L_bc: NDArray[np.floating]) -> float:
     `phi > 0` means the trend is self-reinforcing; `phi = 0` means
     mean-reverting or noisy, warranting full damping of the linear
     extrapolation.
-
-    Implementation: Pearson correlation of `(ΔL_t, ΔL_{t+1})`.  The
-    numerator and denominator are both summed over the same `n-1`
-    overlapping pairs so the estimator is unbiased; an earlier version
-    mixed `n` terms in the denominator with `n-1` in the numerator.
     """
     dL = np.diff(L_bc)
     if len(dL) < 5:
         return 0.0
-    a = dL[:-1]
-    b = dL[1:]
-    a_c = a - a.mean()
-    b_c = b - b.mean()
-    denom = float(np.sqrt(np.dot(a_c, a_c) * np.dot(b_c, b_c)))
-    if denom < _EPS:
+    dL_c = dL - dL.mean()
+    c0 = float(np.dot(dL_c, dL_c))
+    if c0 < _EPS:
         return 0.0
-    rho = float(np.dot(a_c, b_c) / denom)
-    return max(rho, 0.0)
+    c1 = float(np.dot(dL_c[:-1], dL_c[1:]))
+    return max(c1 / c0, 0.0)
