@@ -1,0 +1,190 @@
+{
+  "models": [
+    "Latin",
+    "Italian",
+    "English",
+    "Finnish"
+  ],
+  "alphabet": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "q",
+    "r",
+    "s",
+    "t",
+    "u",
+    "v",
+    "x",
+    "y",
+    "z"
+  ],
+  "n_inverse_codebook_glyphs": 356,
+  "B_decoded_under_Latin": {
+    "n_letters": 21972,
+    "n_unmatched_words": 2873,
+    "n_voynich_words": 17485,
+    "first_500_letters": "nematneminibeooumeieoemaeeinniairiisodbauspteirvustrpteemetmeepmocuateerbsttsmaemneomuenuerecerunlesimoladinaipteiriiuiemauueumatmumeainipeemaruetpieittmeumeiescetpeaiueotimocciucamoodeiuiisectesesaettusmoalcrateotnarnapbsiminoeretetumeanaurmeennaranaereiservulneimeteevemictatediniumpevimimiseeaeuseoedtoelepususaieduueeimanmeirrtemmeeninilimerritermirerbrveiuinirfeyrrrpvrmteeiiurereeiumeipemeciimuteaeengectectepiiitteteriniueeeomnerdtiemqdiiitpneineitmotelnesseotmbcieaetedtirlemdlilnaeaiiustseit"
+  },
+  "A_decoded_under_Latin": {
+    "n_letters": 17318,
+    "n_unmatched_words": 3941,
+    "n_voynich_words": 14484,
+    "first_500_letters": "inesaboiombusaoiagtplslsmsgcaiaailldamddnsuolsntaesnoeelagsdeosgbreamnbrendisnasamndrricmageaeoisbuaesnabuegtleapemndqadraumsltiinfediieaeeioenaiastntxcaintiireaubeltaisapgqnpsmaeccttlqagdeenueuevfgixaietoimyanlneaeiaeilsiaeenxsleniupnfantnmsqltfiuiunaegpanvesoesasmemmiutuiutltnmenaencrmaleaemeetltmiaeamemebiiemicmeesiealeemanveeameitporieamnuelenltetmsmaptltvutmsaaetaeiuietvimitnzepsiallienetdoastuoqeteolocomnaiiucnsteutouannintaiaehingdetaemnaieinohmcixcanxcadaiaetroesnicecehdaabmcornaleiieonh"
+  },
+  "cross_entropy_table": [
+    {
+      "stream": "B (decoded under Latin LM)",
+      "scores": {
+        "Latin": 5.050570594823458,
+        "Italian": 5.8997397191272,
+        "English": 5.4815096025699175,
+        "Finnish": 5.25628700499878
+      },
+      "n_letters": 21972
+    },
+    {
+      "stream": "B (decoded under Italian LM)",
+      "scores": {
+        "Latin": 5.115249034953663,
+        "Italian": 5.729763496893344,
+        "English": 5.399080888742296,
+        "Finnish": 5.158117817113606
+      },
+      "n_letters": 22169
+    },
+    {
+      "stream": "A (decoded under Latin LM)",
+      "scores": {
+        "Latin": 5.27062777551542,
+        "Italian": 6.144201970671801,
+        "English": 5.779903481822836,
+        "Finnish": 5.5838788895089335
+      },
+      "n_letters": 17318
+    },
+    {
+      "stream": "A (decoded under Italian LM)",
+      "scores": {
+        "Latin": 5.332567563235315,
+        "Italian": 6.00789899411291,
+        "English": 5.728859016732942,
+        "Finnish": 5.474054536393646
+      },
+      "n_letters": 17392
+    }
+  ],
+  "letter_freq_compare": {
+    "baseline_Latin": {
+      "a": 0.09432975634115782,
+      "b": 0.015981804605821562,
+      "c": 0.04308234082402452,
+      "d": 0.03443640750467435,
+      "e": 0.10307831515389725,
+      "f": 0.016136800840682648,
+      "g": 0.013649984116853408,
+      "h": 0.012746456577117107,
+      "i": 0.11352469108536245,
+      "l": 0.03899345550880688,
+      "m": 0.04710219198002929,
+      "n": 0.0588604814352334,
+      "o": 0.05410982038687166,
+      "p": 0.026311272114405208,
+      "q": 0.012022259152117696,
+      "r": 0.06926638906647037,
+      "s": 0.06736358545966038,
+      "t": 0.07099594602851243,
+      "u": 0.06968747098779947,
+      "v": 0.024129422385106396,
+      "x": 0.010465419837454972,
+      "y": 0.0030404124910037383,
+      "z": 0.0006853161169369888
+    },
+    "baseline_Italian": {
+      "a": 0.10742248591217139,
+      "b": 0.007397661544572152,
+      "c": 0.05169178065188789,
+      "d": 0.037266340639972195,
+      "e": 0.12064394409552416,
+      "f": 0.012727453268127995,
+      "g": 0.018168954645880395,
+      "h": 0.017655090236576222,
+      "i": 0.10271826825211627,
+      "l": 0.05833229898468337,
+      "m": 0.030002730680435914,
+      "n": 0.06574733758657499,
+      "o": 0.09577985750812998,
+      "p": 0.027974579847578382,
+      "q": 0.008323610456023632,
+      "r": 0.0643571730010178,
+      "s": 0.056192438497629275,
+      "t": 0.05650274309261972,
+      "u": 0.036206340143484846,
+      "v": 0.020276543455055484,
+      "x": 7.4473102797706225e-06,
+      "y": 2.482436759923541e-06,
+      "z": 0.004602437752898245
+    },
+    "B_decoded": {
+      "a": 0.09885308574549427,
+      "b": 0.01142363007464045,
+      "c": 0.038867649736027673,
+      "d": 0.02421263426178773,
+      "e": 0.19269979974513016,
+      "f": 0.005962133624613144,
+      "g": 0.006326233387948298,
+      "h": 0.006826870562534134,
+      "i": 0.10372292008010195,
+      "l": 0.024576734025122882,
+      "m": 0.048288731112324776,
+      "n": 0.04851629346440925,
+      "o": 0.05056435463316949,
+      "p": 0.020435099217185507,
+      "q": 0.004050609867103586,
+      "r": 0.06735845621700345,
+      "s": 0.062124522119060624,
+      "t": 0.0875659930821045,
+      "u": 0.0820589841616603,
+      "v": 0.007236482796286183,
+      "x": 0.0038685599854360094,
+      "y": 0.002412160932095394,
+      "z": 0.0020480611687602405
+    },
+    "A_decoded": {
+      "a": 0.1238595680794549,
+      "b": 0.01143319089964199,
+      "c": 0.02407899295530662,
+      "d": 0.031874350386880704,
+      "e": 0.173634368864765,
+      "f": 0.0043884975170343,
+      "g": 0.014551333872271624,
+      "h": 0.009700889248181084,
+      "i": 0.10393809908765446,
+      "l": 0.04053585864418524,
+      "m": 0.05110289871809678,
+      "n": 0.08216884166762906,
+      "o": 0.054278785079108445,
+      "p": 0.021711514031643377,
+      "q": 0.0054856218962928745,
+      "r": 0.04203718674211803,
+      "s": 0.042383647072410206,
+      "t": 0.0912345536436078,
+      "u": 0.05058320822265851,
+      "v": 0.010451553297147477,
+      "x": 0.007160180159371752,
+      "y": 0.0012703545444046657,
+      "z": 0.0021365053701351195
+    }
+  }
+}
