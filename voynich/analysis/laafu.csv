@@ -1,0 +1,45 @@
+corpus,position,glyph_or_char_jsd,length_jsd,n_words
+voynich:Herbal,first,0.013337,0.027815,1625
+voynich:Herbal,second,0.007529,0.013265,1540
+voynich:Herbal,last,0.037929,0.009537,1540
+voynich:Herbal,penult,0.008609,0.005479,1504
+voynich:ALL,first,0.014068,0.020903,5110
+voynich:ALL,second,0.004865,0.007365,4304
+voynich:ALL,last,0.039915,0.009274,4304
+voynich:ALL,penult,0.006138,0.002341,4121
+voynich:Astronomical,first,0.014439,0.054585,689
+voynich:Astronomical,second,0.025227,0.036142,292
+voynich:Astronomical,last,0.046887,0.023606,292
+voynich:Astronomical,penult,0.013035,0.020557,187
+voynich:Biological,first,0.016092,0.042715,915
+voynich:Biological,second,0.007492,0.002780,790
+voynich:Biological,last,0.041184,0.021036,790
+voynich:Biological,penult,0.003459,0.004309,771
+voynich:Cosmological,first,0.023475,0.047013,184
+voynich:Cosmological,second,0.010842,0.014550,183
+voynich:Cosmological,last,0.059196,0.023029,183
+voynich:Cosmological,penult,0.024578,0.012942,183
+voynich:Pharmaceutical,first,0.036869,0.035289,620
+voynich:Pharmaceutical,second,0.009390,0.017163,424
+voynich:Pharmaceutical,last,0.046628,0.013620,424
+voynich:Pharmaceutical,penult,0.010159,0.013036,404
+voynich:Recipes,first,0.034609,0.021533,1077
+voynich:Recipes,second,0.011199,0.006554,1075
+voynich:Recipes,last,0.054419,0.012609,1075
+voynich:Recipes,penult,0.006815,0.002430,1072
+Latin (Pliny),first,0.001637,0.019422,142799
+Latin (Pliny),second,0.006664,0.063074,142799
+Latin (Pliny),last,0.057501,0.233572,142799
+Latin (Pliny),penult,0.005431,0.050967,100357
+Italian (Dante),first,0.007297,0.012277,3265
+Italian (Dante),second,0.003319,0.007451,3265
+Italian (Dante),last,0.009675,0.186762,3265
+Italian (Dante),penult,0.006824,0.001470,3138
+Finnish (Bible),first,0.009708,0.053311,35472
+Finnish (Bible),second,0.003585,0.017530,35472
+Finnish (Bible),last,0.005282,0.077851,35472
+Finnish (Bible),penult,0.001756,0.006932,34797
+English (P&P),first,0.022087,0.027630,3845
+English (P&P),second,0.009642,0.005888,3845
+English (P&P),last,0.018610,0.033032,3845
+English (P&P),penult,0.002021,0.004304,3744

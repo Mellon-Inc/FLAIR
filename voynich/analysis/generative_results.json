@@ -1,0 +1,72 @@
+{
+  "results": [
+    {
+      "label": "Real Voynichese",
+      "n_tokens": 33144,
+      "n_types": 7111,
+      "hapax_ratio": 0.693432709886092,
+      "avg_word_length": 4.554791214096066,
+      "h1_unigram": 3.898978892917421,
+      "h2_conditional": 2.562628129438389,
+      "zipf_slope": -0.9089227540121895,
+      "zipf_r2": 0.9132942730722678,
+      "repetition_rate": 0.009172374257007513,
+      "graph_n_types_used": 2162,
+      "graph_avg_degree": 12.54209065679926,
+      "graph_largest_share": 0.29740980573543013,
+      "graph_clustering": 0.4762747554227823,
+      "graph_components_geq_10": 10
+    },
+    {
+      "label": "M1 pos*len (type-fit)",
+      "n_tokens": 33144,
+      "n_types": 29755,
+      "hapax_ratio": 0.9311376239287514,
+      "avg_word_length": 5.738776249094859,
+      "h1_unigram": 4.009633240638497,
+      "h2_conditional": 3.889555097378223,
+      "zipf_slope": -0.1886026930263465,
+      "zipf_r2": 0.5895164955884503,
+      "repetition_rate": 0.0,
+      "graph_n_types_used": 2049,
+      "graph_avg_degree": 16.92630551488531,
+      "graph_largest_share": 0.337725719863348,
+      "graph_clustering": 0.5126026640352983,
+      "graph_components_geq_10": 5
+    },
+    {
+      "label": "M2 pos*len (token-fit)",
+      "n_tokens": 33144,
+      "n_types": 18098,
+      "hapax_ratio": 0.8046745496739971,
+      "avg_word_length": 4.594587255611875,
+      "h1_unigram": 3.8904022539181393,
+      "h2_conditional": 3.5988266235261066,
+      "zipf_slope": -0.5157631623754898,
+      "zipf_r2": 0.8286171596459148,
+      "repetition_rate": 0.000512928823582657,
+      "graph_n_types_used": 3535,
+      "graph_avg_degree": 21.907213578500706,
+      "graph_largest_share": 0.3360678925035361,
+      "graph_clustering": 0.45309844278080613,
+      "graph_components_geq_10": 6
+    },
+    {
+      "label": "M3 family + pos*len",
+      "n_tokens": 33144,
+      "n_types": 16609,
+      "hapax_ratio": 0.781925462098862,
+      "avg_word_length": 4.623189717595945,
+      "h1_unigram": 3.887032221341332,
+      "h2_conditional": 3.5726658030272205,
+      "zipf_slope": -0.5693187209265014,
+      "zipf_r2": 0.8549091778009559,
+      "repetition_rate": 0.000724134809763751,
+      "graph_n_types_used": 3622,
+      "graph_avg_degree": 21.353395913859746,
+      "graph_largest_share": 0.31501932633903923,
+      "graph_clustering": 0.4459165764919992,
+      "graph_components_geq_10": 8
+    }
+  ]
+}

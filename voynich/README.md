@@ -18,11 +18,18 @@ voynich/
 │   ├── analyze.py                # 基礎統計 (グリフ・語頻度、Zipf、エントロピー、JSD)
 │   ├── word_families.py          # 編集距離グラフ・語族解析・言語間比較
 │   ├── prep_corpora.py           # 比較コーパス前処理
+│   ├── laafu.py                  # 行内位置効果 (LAAFU) 解析
+│   ├── generative.py             # スロット文法生成ヌルモデル
 │   ├── findings.md               # 基礎解析レポート
 │   ├── findings_morphology.md    # 形態論レポート
+│   ├── findings_laafu.md         # LAAFU レポート
+│   ├── findings_generative.md    # 生成ヌルモデル検証レポート
 │   ├── summary.json              # 基礎統計の機械可読版
 │   ├── voynich_families.json     # 語族 (上位 30) とスロット文法
 │   ├── graph_stats.csv           # 言語間グラフ統計の比較
+│   ├── laafu.{csv,json}          # LAAFU 数値出力
+│   ├── generative_results.json   # ヌルモデル比較
+│   ├── generative_summary.csv
 │   ├── glyph_freq.csv
 │   ├── word_freq.csv
 │   ├── word_length_dist.csv
@@ -51,6 +58,18 @@ python voynich/analysis/analyze.py
 - 上位 3 語族が全語彙の **71%** を占有 (Latin の最大語族は 13%)
 - 各語族のスロット文法は「位置ごとに独立にグリフを選ぶ」生成系と整合
 - → **音写型自然言語ではない**。テンプレート言語 / verbose 置換暗号 / 分類コードの三仮説と整合
+
+### Phase 3 — LAAFU (行内位置効果)
+- 行末グリフ JSD ≈ 0.040 (Latin 0.058、Italian 0.010 の間)
+- ただし行末**語長** JSD = 0.009 — Latin 0.234 / Italian 0.187 と桁違いに低い
+- → 行末は「短い終止語」ではなく「同じ長さで違うグリフの語」が来る → 自然言語的終止ではない
+
+### Phase 4 — 生成ヌルモデル検証
+- スロット文法を独立にサンプリングしたヌルモデル (M1/M2/M3) は実 Voynichese を再現**できない**
+- 失敗指標: タイプ数 2.3× 過剰、h2 が 40% 高、Zipf 傾き 37% 浅、反復率 13× 過小
+- 一致指標: 平均語長、グラフ最大成分占有率、クラスタ係数
+- → **「独立スロット選択」仮説は反証**。スロット間に相関 = 有限語彙集 (≈7,000 語のコードブック) からの参照
+- → Naibbe 系 verbose substitution cipher / 自己引用生成 (Timm & Schinner) / 分類コード説と最も整合
 
 ## データソース
 
