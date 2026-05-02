@@ -1,0 +1,362 @@
+{
+  "global": {
+    "total_word_tokens": 36634,
+    "vocabulary_size": 9352,
+    "hapax_count": 6945,
+    "hapax_ratio": 0.7426218990590248,
+    "type_token_ratio": 0.2552819784899274,
+    "mean_word_length_glyphs": 4.666976033193208,
+    "std_word_length_glyphs": 1.9382923754346082,
+    "n_glyph_types": 37,
+    "glyph_h0_max_uniform_bits": 5.20945336562895,
+    "glyph_h1_unigram_bits": 3.9173452929291805,
+    "glyph_h2_conditional_bits": 2.5636169735033794,
+    "zipf_slope": -0.8169328786023208,
+    "zipf_r2": 0.8794215161140131,
+    "n_lines": 5118,
+    "n_folios": 225
+  },
+  "sections": {
+    "Herbal": {
+      "tokens": 10773,
+      "types": 3868,
+      "hapax": 2935,
+      "ttr": 0.35904576255453446,
+      "mean_wlen": 4.462823725981621,
+      "h1": 3.975910691983667,
+      "h2": 2.7144333630174957,
+      "zipf_slope": -0.7245345132448783,
+      "zipf_r2": 0.8683667534185615,
+      "n_glyphs": 48078,
+      "top_words": [
+        [
+          "daiin",
+          414
+        ],
+        [
+          "chol",
+          220
+        ],
+        [
+          "chor",
+          143
+        ],
+        [
+          "s",
+          106
+        ],
+        [
+          "or",
+          105
+        ],
+        [
+          "dy",
+          104
+        ],
+        [
+          "Shol",
+          102
+        ],
+        [
+          "dar",
+          98
+        ],
+        [
+          "aiin",
+          98
+        ],
+        [
+          "cThy",
+          92
+        ]
+      ]
+    },
+    "Astronomical": {
+      "tokens": 2891,
+      "types": 1655,
+      "hapax": 1345,
+      "ttr": 0.5724662746454514,
+      "mean_wlen": 4.786924939467313,
+      "h1": 3.7650011163071646,
+      "h2": 2.6638508824681915,
+      "zipf_slope": -0.5301494579328927,
+      "zipf_r2": 0.817666619152271,
+      "n_glyphs": 13839,
+      "top_words": [
+        [
+          "ar",
+          52
+        ],
+        [
+          "al",
+          47
+        ],
+        [
+          "aiin",
+          39
+        ],
+        [
+          "dar",
+          34
+        ],
+        [
+          "oteey",
+          32
+        ],
+        [
+          "dal",
+          29
+        ],
+        [
+          "daiin",
+          29
+        ],
+        [
+          "dy",
+          29
+        ],
+        [
+          "okeey",
+          19
+        ],
+        [
+          "oteos",
+          18
+        ]
+      ]
+    },
+    "Cosmological": {
+      "tokens": 1774,
+      "types": 843,
+      "hapax": 600,
+      "ttr": 0.47519729425028184,
+      "mean_wlen": 4.7102593010146565,
+      "h1": 3.905356603299098,
+      "h2": 2.370481096312256,
+      "zipf_slope": -0.6541112782147421,
+      "zipf_r2": 0.9034116427517933,
+      "n_glyphs": 8356,
+      "top_words": [
+        [
+          "aiin",
+          48
+        ],
+        [
+          "or",
+          44
+        ],
+        [
+          "ol",
+          33
+        ],
+        [
+          "ar",
+          30
+        ],
+        [
+          "dar",
+          27
+        ],
+        [
+          "daiin",
+          25
+        ],
+        [
+          "chedy",
+          21
+        ],
+        [
+          "qokar",
+          19
+        ],
+        [
+          "qokaiin",
+          18
+        ],
+        [
+          "otedy",
+          16
+        ]
+      ]
+    },
+    "Biological": {
+      "tokens": 6865,
+      "types": 1794,
+      "hapax": 1271,
+      "ttr": 0.2613255644573926,
+      "mean_wlen": 4.582520029133285,
+      "h1": 3.8137202149211187,
+      "h2": 2.110093345821575,
+      "zipf_slope": -0.8744800028853112,
+      "zipf_r2": 0.9030307645514539,
+      "n_glyphs": 31459,
+      "top_words": [
+        [
+          "Shedy",
+          247
+        ],
+        [
+          "ol",
+          231
+        ],
+        [
+          "chedy",
+          208
+        ],
+        [
+          "qokedy",
+          159
+        ],
+        [
+          "qokeedy",
+          148
+        ],
+        [
+          "qol",
+          114
+        ],
+        [
+          "qokal",
+          104
+        ],
+        [
+          "qokai!n",
+          103
+        ],
+        [
+          "Shey",
+          94
+        ],
+        [
+          "chey",
+          91
+        ]
+      ]
+    },
+    "Pharmaceutical": {
+      "tokens": 3711,
+      "types": 1726,
+      "hapax": 1328,
+      "ttr": 0.4651037456211264,
+      "mean_wlen": 4.742926434923201,
+      "h1": 3.917206720723355,
+      "h2": 2.599131601670253,
+      "zipf_slope": -0.6409428625798984,
+      "zipf_r2": 0.8615095877330093,
+      "n_glyphs": 17601,
+      "top_words": [
+        [
+          "daiin",
+          115
+        ],
+        [
+          "chol",
+          57
+        ],
+        [
+          "ol",
+          54
+        ],
+        [
+          "or",
+          48
+        ],
+        [
+          "s",
+          44
+        ],
+        [
+          "cheol",
+          41
+        ],
+        [
+          "aiin",
+          34
+        ],
+        [
+          "dal",
+          32
+        ],
+        [
+          "chor",
+          30
+        ],
+        [
+          "okeol",
+          29
+        ]
+      ]
+    },
+    "Recipes": {
+      "tokens": 10620,
+      "types": 3244,
+      "hapax": 2310,
+      "ttr": 0.3054613935969868,
+      "mean_wlen": 4.862241054613936,
+      "h1": 3.845869115313763,
+      "h2": 2.312966760550041,
+      "zipf_slope": -0.8165102163072419,
+      "zipf_r2": 0.9040743052699839,
+      "n_glyphs": 51637,
+      "top_words": [
+        [
+          "aiin",
+          191
+        ],
+        [
+          "chedy",
+          189
+        ],
+        [
+          "qokeey",
+          156
+        ],
+        [
+          "ar",
+          141
+        ],
+        [
+          "qokeedy",
+          137
+        ],
+        [
+          "al",
+          135
+        ],
+        [
+          "daiin",
+          122
+        ],
+        [
+          "chey",
+          119
+        ],
+        [
+          "qokaiin",
+          114
+        ],
+        [
+          "Shedy",
+          113
+        ]
+      ]
+    }
+  },
+  "section_glyph_jsd": {
+    "Herbal|Astronomical": 0.030500086419467165,
+    "Herbal|Cosmological": 0.015914176911032994,
+    "Herbal|Biological": 0.03226680382717254,
+    "Herbal|Pharmaceutical": 0.014901422593431224,
+    "Herbal|Recipes": 0.02530546766690298,
+    "Astronomical|Cosmological": 0.029071360777155723,
+    "Astronomical|Biological": 0.037760687773318743,
+    "Astronomical|Pharmaceutical": 0.021106840460015795,
+    "Astronomical|Recipes": 0.028746795501088135,
+    "Cosmological|Biological": 0.028513320719292565,
+    "Cosmological|Pharmaceutical": 0.025906759796435662,
+    "Cosmological|Recipes": 0.010932985826438802,
+    "Biological|Pharmaceutical": 0.02312169408550271,
+    "Biological|Recipes": 0.016408208562701948,
+    "Pharmaceutical|Recipes": 0.020818262358838952
+  }
+}
