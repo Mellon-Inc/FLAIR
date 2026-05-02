@@ -123,61 +123,73 @@ def build_id_stream(words, word_to_idx):
 
 # ----------------- scoring (bigram, vectorised) -----------------
 
-def score_assignment(assign: np.ndarray, arity: np.ndarray,
-                     id_stream: np.ndarray,
-                     log_p: np.ndarray, log_marg: np.ndarray) -> tuple[float, int]:
-    """Per-letter cross-entropy of the unrolled stream under the bigram LM.
+def build_unroll(id_stream: np.ndarray, arity: np.ndarray):
+    """Pre-compute index arrays for vectorised scoring.
 
-    assign: shape (n_vocab, 2). arity: shape (n_vocab,) values in {1, 2}.
-    OOV tokens (id == -1) are 'reset' positions.
+    Returns (word_idx, slot_idx, fresh):
+      word_idx[k]  = vocab index whose token contributed letter k
+      slot_idx[k]  = 0 or 1 (which slot of that word)
+      fresh[k]     = True iff letter k is the FIRST letter of a Voynichese
+                     word that itself follows a reset (OOV / start)
     """
     valid_mask = id_stream >= 0
     valid_ids = id_stream[valid_mask]
     if valid_ids.size == 0:
-        return float("inf"), 0
-    arities = arity[valid_ids]
-    # build the unrolled letter stream PLUS a parallel "is-fresh" mask
-    # ("fresh" = first letter of a word that came right after a reset/OOV).
+        return (np.zeros(0, dtype=np.int64), np.zeros(0, dtype=np.int64),
+                np.zeros(0, dtype=bool))
+    arities = arity[valid_ids].astype(np.int64)
+    total = int(arities.sum())
+
+    word_idx = np.repeat(valid_ids.astype(np.int64), arities)
+    # slot_idx: for arities [1, 2, 1, 2] -> [0, 0, 1, 0, 0, 1]
+    # arange of total minus cumulative offset
+    cum_offsets = np.concatenate(([0], np.cumsum(arities)[:-1]))
+    slot_idx = np.arange(total, dtype=np.int64) - np.repeat(cum_offsets, arities)
+
+    # is_fresh per Voynichese word
     valid_positions = np.where(valid_mask)[0]
-    pos_diff = np.diff(valid_positions)
-    adjacent = pos_diff == 1  # length n-1, True if no OOV between
-    # is_fresh per word: True if it's the first word, or after a non-adjacent
-    is_fresh_word = np.concatenate(([True], ~adjacent))
-
-    # unroll letters and per-letter "fresh" flag
-    out_letters = []
-    out_fresh = []
-    for k in range(valid_ids.size):
-        wid = valid_ids[k]
-        ar = arities[k]
-        if ar == 1:
-            out_letters.append(assign[wid, 0])
-            out_fresh.append(is_fresh_word[k])
-        else:  # arity 2
-            out_letters.append(assign[wid, 0])
-            out_letters.append(assign[wid, 1])
-            out_fresh.append(is_fresh_word[k])
-            out_fresh.append(False)  # second letter is bigram-conditioned on first
-    letters = np.array(out_letters, dtype=np.int64)
-    fresh = np.array(out_fresh, dtype=bool)
-    n_letters = letters.size
-
-    if n_letters == 0:
-        return float("inf"), 0
-
-    # score: each letter at position k contributes either log_marg[letters[k]]
-    # if fresh[k] else log_p[letters[k-1], letters[k]]
-    if n_letters == 1:
-        total = float(log_marg[letters[0]])
+    if valid_positions.size > 1:
+        pos_diff = np.diff(valid_positions)
+        is_fresh_word = np.concatenate(([True], pos_diff != 1))
     else:
-        is_bigram = ~fresh.copy()
-        is_bigram[0] = False
-        bigram_idx = np.where(is_bigram)[0]
-        bigram_total = log_p[letters[bigram_idx - 1], letters[bigram_idx]].sum()
-        marg_idx = np.where(fresh)[0]
-        marg_total = log_marg[letters[marg_idx]].sum()
-        total = float(bigram_total + marg_total)
-    return -total / n_letters / math.log(2), n_letters
+        is_fresh_word = np.array([True])
+
+    # offset of each word's first letter in the output
+    offsets = cum_offsets  # length n_valid
+    fresh = np.zeros(total, dtype=bool)
+    fresh[offsets] = is_fresh_word
+    return word_idx, slot_idx, fresh
+
+
+def score_with_unroll(assign: np.ndarray,
+                      word_idx: np.ndarray, slot_idx: np.ndarray,
+                      fresh: np.ndarray,
+                      log_p: np.ndarray, log_marg: np.ndarray) -> tuple[float, int]:
+    """Vectorised per-letter cross-entropy."""
+    n = word_idx.size
+    if n == 0:
+        return float("inf"), 0
+    letters = assign[word_idx, slot_idx]
+    fresh_letters = letters[fresh]
+    fresh_total = float(log_marg[fresh_letters].sum())
+    nonfresh_idx = np.where(~fresh)[0]
+    if nonfresh_idx.size > 0:
+        nonfresh_total = float(
+            log_p[letters[nonfresh_idx - 1], letters[nonfresh_idx]].sum()
+        )
+    else:
+        nonfresh_total = 0.0
+    total = fresh_total + nonfresh_total
+    return -total / n / math.log(2), n
+
+
+def score_assignment(assign, arity, id_stream, log_p, log_marg):
+    """Compatibility wrapper: rebuild unroll structure each call.
+
+    Use score_with_unroll inside hot SA loop; this is for one-off calls.
+    """
+    word_idx, slot_idx, fresh = build_unroll(id_stream, arity)
+    return score_with_unroll(assign, word_idx, slot_idx, fresh, log_p, log_marg)
 
 
 def render_assignment(assign, arity, id_stream):
@@ -209,7 +221,10 @@ def sa_search(id_stream, log_p, log_marg, n_vocab,
     else:
         arity = np.array(init_arity, dtype=np.int8).copy()
 
-    cur_ce, n_letters = score_assignment(assign, arity, id_stream, log_p, log_marg)
+    # Build unroll structure ONCE; rebuild only on arity flips.
+    word_idx, slot_idx, fresh = build_unroll(id_stream, arity)
+    cur_ce, n_letters = score_with_unroll(assign, word_idx, slot_idx, fresh,
+                                           log_p, log_marg)
     best_ce = cur_ce
     best_assign = assign.copy()
     best_arity = arity.copy()
@@ -222,15 +237,16 @@ def sa_search(id_stream, log_p, log_marg, n_vocab,
     for it in range(n_iters):
         T = math.exp(log_T_start + (log_T_end - log_T_start) * it / n_iters)
         idx = rng.randrange(n_vocab)
-        # move type: 70% letter change, 30% arity flip (with letter resample)
-        if rng.random() < 0.7:
+        # move type: 80% letter change (no rebuild), 20% arity flip (rebuild)
+        if rng.random() < 0.8:
             slot = 0 if arity[idx] == 1 else rng.randint(0, 1)
             old_letter = assign[idx, slot]
             new_letter = rng.randrange(N - 1)
             if new_letter >= old_letter:
                 new_letter += 1
             assign[idx, slot] = new_letter
-            new_ce, _ = score_assignment(assign, arity, id_stream, log_p, log_marg)
+            new_ce, _ = score_with_unroll(assign, word_idx, slot_idx, fresh,
+                                           log_p, log_marg)
             delta = new_ce - cur_ce
             if delta < 0 or rng.random() < math.exp(-delta / T):
                 cur_ce = new_ce
@@ -244,17 +260,19 @@ def sa_search(id_stream, log_p, log_marg, n_vocab,
                 rejects += 1
         else:
             old_arity = arity[idx]
-            new_arity = 3 - old_arity  # 1 <-> 2
+            new_arity = 3 - old_arity
             old_assign1 = assign[idx, 1]
             arity[idx] = new_arity
             if new_arity == 2:
-                # need a fresh second letter
                 assign[idx, 1] = rng.randrange(N)
-            new_ce, _ = score_assignment(assign, arity, id_stream, log_p, log_marg)
+            new_word_idx, new_slot_idx, new_fresh = build_unroll(id_stream, arity)
+            new_ce, _ = score_with_unroll(assign, new_word_idx, new_slot_idx,
+                                           new_fresh, log_p, log_marg)
             delta = new_ce - cur_ce
             if delta < 0 or rng.random() < math.exp(-delta / T):
                 cur_ce = new_ce
                 accepts += 1
+                word_idx, slot_idx, fresh = new_word_idx, new_slot_idx, new_fresh
                 if cur_ce < best_ce:
                     best_ce = cur_ce
                     best_assign = assign.copy()
