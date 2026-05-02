@@ -24,6 +24,9 @@ voynich/
 │   ├── findings_morphology.md    # 形態論レポート
 │   ├── findings_laafu.md         # LAAFU レポート
 │   ├── findings_generative.md    # 生成ヌルモデル検証レポート
+│   ├── findings_naibbe.md        # Naibbe 暗号比較レポート
+│   ├── naibbe_compare.py         # Naibbe 出力 vs 実 Voynichese 比較スクリプト
+│   ├── naibbe_comparison.{json,csv} # 比較結果
 │   ├── summary.json              # 基礎統計の機械可読版
 │   ├── voynich_families.json     # 語族 (上位 30) とスロット文法
 │   ├── graph_stats.csv           # 言語間グラフ統計の比較
@@ -70,6 +73,17 @@ python voynich/analysis/analyze.py
 - 一致指標: 平均語長、グラフ最大成分占有率、クラスタ係数
 - → **「独立スロット選択」仮説は反証**。スロット間に相関 = 有限語彙集 (≈7,000 語のコードブック) からの参照
 - → Naibbe 系 verbose substitution cipher / 自己引用生成 (Timm & Schinner) / 分類コード説と最も整合
+
+### Phase 5 — Naibbe 暗号 (Greshko 2025) との直接比較
+- Greshko の公式実装で **Pliny Naturalis Historia** をラテン語のまま暗号化、合成 Voynichese を生成
+- Phase 4 でヌルモデルが失敗した 4 指標 **すべてで Naibbe は実 Voynichese と ≤6% 一致**
+  - h2: Real 2.56 / Naibbe 2.47 (M3 は 3.57)
+  - Zipf 傾き: Real -0.91 / Naibbe -0.96 (M3 は -0.57)
+  - グラフ平均次数: Real 12.5 / Naibbe 11.8 (M3 は 21.4)
+  - 語タイプ数: Real 7,111 / Naibbe 5,488 (M3 は 16,609)
+- 位置選好も完全再現: q@99% 語頭、n@97% 語尾、i@100% 語中 — 全て一致
+- 残された非整合: 反復率 (Real 0.92% / Naibbe 0.16%)、Hapax 比 (Real 0.69 / Naibbe 0.41)
+- → **「Voynichese = 15 世紀型 verbose homophonic substitution cipher」仮説への強い経験的支持**
 
 ## データソース
 

@@ -1,0 +1,320 @@
+{
+  "results": [
+    {
+      "label": "Real Voynichese",
+      "n_tokens": 33144,
+      "n_types": 7111,
+      "type_token_ratio": 0.2145486362539223,
+      "hapax_ratio": 0.693432709886092,
+      "avg_word_length": 4.554791214096066,
+      "h1_unigram": 3.898978892917421,
+      "h2_conditional": 2.562628129438389,
+      "zipf_slope": -0.9089227540121895,
+      "zipf_r2": 0.9132942730722678,
+      "repetition_rate": 0.009172374257007513,
+      "graph_n_types_used": 2162,
+      "graph_avg_degree": 12.54209065679926,
+      "graph_largest_share": 0.29740980573543013,
+      "graph_clustering": 0.4762747554227823,
+      "graph_components_geq_10": 10,
+      "positional_signature": {
+        "i": {
+          "total": 9511,
+          "initial": 0.001,
+          "medial": 0.999,
+          "final": 0.0
+        },
+        "ch": {
+          "total": 9938,
+          "initial": 0.548,
+          "medial": 0.45,
+          "final": 0.002
+        },
+        "q": {
+          "total": 4882,
+          "initial": 0.991,
+          "medial": 0.009,
+          "final": 0.0
+        },
+        "t": {
+          "total": 5293,
+          "initial": 0.164,
+          "medial": 0.828,
+          "final": 0.008
+        },
+        "k": {
+          "total": 8655,
+          "initial": 0.118,
+          "medial": 0.875,
+          "final": 0.007
+        },
+        "y": {
+          "total": 16284,
+          "initial": 0.097,
+          "medial": 0.042,
+          "final": 0.86
+        },
+        "n": {
+          "total": 4502,
+          "initial": 0.001,
+          "medial": 0.029,
+          "final": 0.971
+        },
+        "Sh": {
+          "total": 4088,
+          "initial": 0.729,
+          "medial": 0.265,
+          "final": 0.006
+        }
+      }
+    },
+    {
+      "label": "Naibbe(Pliny BookXVI)",
+      "n_tokens": 34764,
+      "n_types": 5600,
+      "type_token_ratio": 0.16108618110689218,
+      "hapax_ratio": 0.40910714285714284,
+      "avg_word_length": 4.7950753653204465,
+      "h1_unigram": 3.851123028340185,
+      "h2_conditional": 2.46899093524228,
+      "zipf_slope": -0.973133259146272,
+      "zipf_r2": 0.967102553953602,
+      "repetition_rate": 0.0015533757155596468,
+      "graph_n_types_used": 3308,
+      "graph_avg_degree": 11.993349455864571,
+      "graph_largest_share": 0.2699516324062878,
+      "graph_clustering": 0.41756331283720766,
+      "graph_components_geq_10": 9,
+      "positional_signature": {
+        "i": {
+          "total": 12824,
+          "initial": 0.0,
+          "medial": 1.0,
+          "final": 0.0
+        },
+        "n": {
+          "total": 6782,
+          "initial": 0.0,
+          "medial": 0.031,
+          "final": 0.969
+        },
+        "q": {
+          "total": 6229,
+          "initial": 1.0,
+          "medial": 0.0,
+          "final": 0.0
+        },
+        "t": {
+          "total": 4731,
+          "initial": 0.18,
+          "medial": 0.82,
+          "final": 0.0
+        },
+        "k": {
+          "total": 8995,
+          "initial": 0.125,
+          "medial": 0.874,
+          "final": 0.001
+        },
+        "y": {
+          "total": 15532,
+          "initial": 0.111,
+          "medial": 0.035,
+          "final": 0.854
+        },
+        "ch": {
+          "total": 7938,
+          "initial": 0.387,
+          "medial": 0.61,
+          "final": 0.003
+        }
+      }
+    },
+    {
+      "label": "Naibbe(Pliny) matched",
+      "n_tokens": 33144,
+      "n_types": 5488,
+      "type_token_ratio": 0.16558049722423365,
+      "hapax_ratio": 0.4149052478134111,
+      "avg_word_length": 4.7915761525464635,
+      "h1_unigram": 3.851673372930908,
+      "h2_conditional": 2.4706847573821538,
+      "zipf_slope": -0.9647446669813888,
+      "zipf_r2": 0.967205517445853,
+      "repetition_rate": 0.0015991310382282835,
+      "graph_n_types_used": 3210,
+      "graph_avg_degree": 11.812461059190031,
+      "graph_largest_share": 0.270404984423676,
+      "graph_clustering": 0.41923811340226963,
+      "graph_components_geq_10": 9,
+      "positional_signature": {
+        "i": {
+          "total": 12193,
+          "initial": 0.0,
+          "medial": 1.0,
+          "final": 0.0
+        },
+        "n": {
+          "total": 6459,
+          "initial": 0.0,
+          "medial": 0.031,
+          "final": 0.969
+        },
+        "q": {
+          "total": 5941,
+          "initial": 1.0,
+          "medial": 0.0,
+          "final": 0.0
+        },
+        "t": {
+          "total": 4511,
+          "initial": 0.181,
+          "medial": 0.819,
+          "final": 0.0
+        },
+        "k": {
+          "total": 8575,
+          "initial": 0.125,
+          "medial": 0.873,
+          "final": 0.001
+        },
+        "y": {
+          "total": 14782,
+          "initial": 0.111,
+          "medial": 0.035,
+          "final": 0.854
+        },
+        "ch": {
+          "total": 7550,
+          "initial": 0.389,
+          "medial": 0.608,
+          "final": 0.003
+        }
+      }
+    },
+    {
+      "label": "Naibbe(Divina Commedia)",
+      "n_tokens": 535922,
+      "n_types": 9032,
+      "type_token_ratio": 0.016853198786390557,
+      "hapax_ratio": 0.09156333038086803,
+      "avg_word_length": 4.71997604128959,
+      "h1_unigram": 3.8579947886754504,
+      "h2_conditional": 2.501946690267004,
+      "zipf_slope": -1.3862104679004166,
+      "zipf_r2": 0.8440202956718098,
+      "repetition_rate": 0.0018304936735078492,
+      "graph_n_types_used": 8204,
+      "graph_avg_degree": 17.865431496830816,
+      "graph_largest_share": 0.2529254022428084,
+      "graph_clustering": 0.368965875646868,
+      "graph_components_geq_10": 14,
+      "positional_signature": {
+        "i": {
+          "total": 190231,
+          "initial": 0.0,
+          "medial": 1.0,
+          "final": 0.0
+        },
+        "n": {
+          "total": 93717,
+          "initial": 0.0,
+          "medial": 0.031,
+          "final": 0.969
+        },
+        "q": {
+          "total": 88721,
+          "initial": 1.0,
+          "medial": 0.0,
+          "final": 0.0
+        },
+        "t": {
+          "total": 64204,
+          "initial": 0.191,
+          "medial": 0.809,
+          "final": 0.0
+        },
+        "k": {
+          "total": 127293,
+          "initial": 0.119,
+          "medial": 0.878,
+          "final": 0.003
+        },
+        "y": {
+          "total": 242462,
+          "initial": 0.119,
+          "medial": 0.048,
+          "final": 0.833
+        },
+        "ch": {
+          "total": 135605,
+          "initial": 0.399,
+          "medial": 0.601,
+          "final": 0.0
+        }
+      }
+    },
+    {
+      "label": "Naibbe(Dante) matched",
+      "n_tokens": 33144,
+      "n_types": 5152,
+      "type_token_ratio": 0.15544291576152547,
+      "hapax_ratio": 0.37131211180124224,
+      "avg_word_length": 4.716660632391987,
+      "h1_unigram": 3.8550708697959557,
+      "h2_conditional": 2.500843302599423,
+      "zipf_slope": -0.9672152873945384,
+      "zipf_r2": 0.9617988546205978,
+      "repetition_rate": 0.0016293033219684399,
+      "graph_n_types_used": 3238,
+      "graph_avg_degree": 10.92958616429895,
+      "graph_largest_share": 0.2600370599135269,
+      "graph_clustering": 0.4117042462999734,
+      "graph_components_geq_10": 10,
+      "positional_signature": {
+        "i": {
+          "total": 11709,
+          "initial": 0.0,
+          "medial": 1.0,
+          "final": 0.0
+        },
+        "n": {
+          "total": 5801,
+          "initial": 0.0,
+          "medial": 0.034,
+          "final": 0.966
+        },
+        "q": {
+          "total": 5469,
+          "initial": 1.0,
+          "medial": 0.0,
+          "final": 0.0
+        },
+        "t": {
+          "total": 3945,
+          "initial": 0.197,
+          "medial": 0.803,
+          "final": 0.0
+        },
+        "k": {
+          "total": 7803,
+          "initial": 0.118,
+          "medial": 0.879,
+          "final": 0.003
+        },
+        "y": {
+          "total": 14988,
+          "initial": 0.118,
+          "medial": 0.047,
+          "final": 0.835
+        },
+        "ch": {
+          "total": 8314,
+          "initial": 0.399,
+          "medial": 0.6,
+          "final": 0.0
+        }
+      }
+    }
+  ]
+}
