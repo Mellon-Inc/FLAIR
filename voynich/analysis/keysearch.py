@@ -35,6 +35,8 @@ import time
 from collections import Counter, defaultdict
 from pathlib import Path
 
+import numpy as np
+
 ROOT = Path(__file__).resolve().parent
 DATA = ROOT.parent / "data"
 sys.path.insert(0, str(ROOT))
@@ -128,83 +130,74 @@ def normalise(text: str) -> str:
     return text
 
 
-def train_bigram_matrix(corpus_path: Path, smooth: float = 0.5) -> list[list[float]]:
-    """Returns log_p[a][b] = log P(b|a) with Laplace smoothing.
+def train_bigram_matrix(corpus_path: Path, smooth: float = 0.5):
+    """Returns (log_p, log_marg) as numpy arrays.
 
-    Training is on the **concatenated** letter stream (no word boundaries),
-    matching the cipher's space-removal behaviour.
+    log_p[a, b] = log P(b | a). Trained on the **concatenated** letter
+    stream (no word boundaries), matching the cipher's space-removal
+    behaviour.
     """
     text = corpus_path.read_text(encoding="utf-8", errors="ignore")
     letters = normalise(text)
     n = len(ALPHABET)
-    counts = [[0] * n for _ in range(n)]
-    init_counts = [0] * n  # P(b|^) approximation: use marginal frequency
-    for a, b in zip(letters[:-1], letters[1:]):
-        counts[ABC_INDEX[a]][ABC_INDEX[b]] += 1
-    # marginal letter frequency for "BOS" handling
-    marg = Counter(letters)
-    log_p = [[0.0] * n for _ in range(n)]
-    for i in range(n):
-        row_sum = sum(counts[i]) + smooth * n
-        for j in range(n):
-            log_p[i][j] = math.log((counts[i][j] + smooth) / row_sum)
-    # marginal log-prob (used as start-of-stream emission prob)
-    total_marg = sum(marg.values()) + smooth * n
-    log_marg = [math.log((marg.get(c, 0) + smooth) / total_marg) for c in ALPHABET]
+    counts = np.zeros((n, n), dtype=np.float64)
+    idxs = np.array([ABC_INDEX[c] for c in letters], dtype=np.int64)
+    np.add.at(counts, (idxs[:-1], idxs[1:]), 1.0)
+    row_sums = counts.sum(axis=1) + smooth * n
+    log_p = np.log((counts + smooth) / row_sums[:, None])
+    marg = np.bincount(idxs, minlength=n).astype(np.float64)
+    log_marg = np.log((marg + smooth) / (marg.sum() + smooth * n))
     return log_p, log_marg
 
 
 # --------------- scoring ----------------
 
-def score_permutation(perm: list[int], decodings: list[list[int]],
-                      log_p: list[list[float]],
-                      log_marg: list[float]) -> tuple[float, int]:
-    """Per-letter cross-entropy (bits/letter, lower=better).
+def flatten_decodings(decodings: list[list[int]]) -> np.ndarray:
+    """Concatenate all decoded letters into a single int32 stream (we ignore
+    Voynich-word boundaries in scoring, matching cipher's destroyed plaintext
+    spaces)."""
+    parts = [np.array(d, dtype=np.int32) for d in decodings if d]
+    if not parts:
+        return np.zeros(0, dtype=np.int32)
+    return np.concatenate(parts)
 
-    `perm` is a permutation array: perm[g] = π(g) = the actual letter (index)
-    that Greshko-letter g really stands for.
 
-    For each Voynichese-word decoding [g0, g1, ...], we map g_i -> π(g_i)
-    and score the resulting concatenated stream under log_p (bigram LM).
-    """
-    score = 0.0
-    n = 0
-    prev = -1  # -1 => use marginal
-    for letters in decodings:
-        for g in letters:
-            mapped = perm[g]
-            if prev == -1:
-                score += log_marg[mapped]
-            else:
-                score += log_p[prev][mapped]
-            prev = mapped
-            n += 1
+def score_perm_fast(perm_arr: np.ndarray, dec_flat: np.ndarray,
+                    log_p: np.ndarray, log_marg: np.ndarray) -> float:
+    """Vectorised per-letter cross-entropy (bits/letter, lower=better)."""
+    n = dec_flat.size
     if n == 0:
-        return float("inf"), 0
-    return -score / n / math.log(2), n  # bits/letter
+        return float("inf")
+    mapped = perm_arr[dec_flat]
+    if n == 1:
+        total = log_marg[mapped[0]]
+    else:
+        total = log_marg[mapped[0]] + log_p[mapped[:-1], mapped[1:]].sum()
+    return -float(total) / n / math.log(2)
 
 
-def apply_perm(perm: list[int], decodings: list[list[int]]) -> str:
+def apply_perm_str(perm_arr: np.ndarray, decodings: list[list[int]]) -> str:
+    """Render the permuted decodings as a string with spaces between
+    Voynichese-word groups."""
     out = []
     for letters in decodings:
-        for g in letters:
-            out.append(ALPHABET[perm[g]])
+        if letters:
+            out.append("".join(ALPHABET[perm_arr[g]] for g in letters))
         out.append(" ")
     return "".join(out)
 
 
 # --------------- simulated annealing ----------------
 
-def sa_search(decodings, log_p, log_marg, n_iters=80000,
-              T_start=1.0, T_end=0.005, init_perm=None, seed=42, verbose=True):
+def sa_search(dec_flat: np.ndarray, log_p: np.ndarray, log_marg: np.ndarray,
+              n_iters: int = 80000, T_start: float = 0.5, T_end: float = 0.005,
+              init_perm=None, seed: int = 42, verbose: bool = True):
     rng = random.Random(seed)
     n = len(ALPHABET)
-    if init_perm is None:
-        perm = list(range(n))
-    else:
-        perm = list(init_perm)
-    best_perm = list(perm)
-    cur_ce, n_letters = score_permutation(perm, decodings, log_p, log_marg)
+    perm = np.array(list(range(n)) if init_perm is None else init_perm,
+                    dtype=np.int64)
+    best_perm = perm.copy()
+    cur_ce = score_perm_fast(perm, dec_flat, log_p, log_marg)
     best_ce = cur_ce
 
     log_T_start = math.log(T_start)
@@ -213,30 +206,31 @@ def sa_search(decodings, log_p, log_marg, n_iters=80000,
     accepts = 0
     rejects = 0
     last_print = time.time()
+    t0 = time.time()
     for it in range(n_iters):
-        # log-linear cooling
         T = math.exp(log_T_start + (log_T_end - log_T_start) * it / n_iters)
-        # propose: swap two distinct positions
         i, j = rng.sample(range(n), 2)
         perm[i], perm[j] = perm[j], perm[i]
-        new_ce, _ = score_permutation(perm, decodings, log_p, log_marg)
-        delta = new_ce - cur_ce  # bits/letter; positive = worse
+        new_ce = score_perm_fast(perm, dec_flat, log_p, log_marg)
+        delta = new_ce - cur_ce
         if delta < 0 or rng.random() < math.exp(-delta / T):
             cur_ce = new_ce
             accepts += 1
             if cur_ce < best_ce:
                 best_ce = cur_ce
-                best_perm = list(perm)
+                best_perm = perm.copy()
         else:
-            perm[i], perm[j] = perm[j], perm[i]  # revert
+            perm[i], perm[j] = perm[j], perm[i]
             rejects += 1
-        if verbose and time.time() - last_print > 5:
-            print(f"  iter {it:>6}  T={T:.4f}  cur_ce={cur_ce:.4f}  best_ce={best_ce:.4f}  "
-                  f"accepts={accepts} rejects={rejects}")
+        if verbose and time.time() - last_print > 4:
+            print(f"  iter {it:>6}  T={T:.4f}  cur={cur_ce:.4f}  best={best_ce:.4f}  "
+                  f"accepts={accepts} rejects={rejects}  "
+                  f"({(it+1)/(time.time()-t0):.0f} it/s)", flush=True)
             last_print = time.time()
     if verbose:
-        print(f"  done. best_ce={best_ce:.4f} accepts={accepts} rejects={rejects}")
-    return best_perm, best_ce, n_letters
+        print(f"  done in {time.time()-t0:.1f}s. best_ce={best_ce:.4f} "
+              f"accepts={accepts} rejects={rejects}", flush=True)
+    return best_perm, best_ce
 
 
 # --------------- A/B subcorpora ----------------
@@ -278,123 +272,133 @@ def main():
     print("Loading inverse codebook...")
     inv = load_inverse_codebook()
 
-    print("Training Latin bigram LM (no word boundaries)...")
-    latin_log_p, latin_log_marg = train_bigram_matrix(
-        DATA / "comparison" / "latin_pliny.txt")
-    italian_log_p, italian_log_marg = train_bigram_matrix(
-        DATA / "comparison" / "italian_dc.txt")
-    finnish_log_p, finnish_log_marg = train_bigram_matrix(
-        DATA / "comparison" / "finnish_bible.txt")
-    english_log_p, english_log_marg = train_bigram_matrix(
-        DATA / "comparison" / "english_pp_clean.txt")
+    print("Training bigram LMs (no word boundaries)...", flush=True)
+    LM = {}
+    for name, fname in [("Latin", "latin_pliny.txt"),
+                        ("Italian", "italian_dc.txt"),
+                        ("Finnish", "finnish_bible.txt"),
+                        ("English", "english_pp_clean.txt")]:
+        LM[name] = train_bigram_matrix(DATA / "comparison" / fname)
+        print(f"  {name} trained", flush=True)
 
-    # ---- pre-flight sanity: Naibbe(Pliny) under identity perm ----
-    print("\n--- Sanity: Naibbe(Pliny) decoded with identity permutation ---")
+    n = len(ALPHABET)
+    identity_perm = np.arange(n, dtype=np.int64)
+
+    # ---- pre-flight sanity ----
+    print("\n--- Sanity: Naibbe(Pliny) decoded with identity permutation ---", flush=True)
     pliny_naibbe = (DATA / "naibbe" / "naibbe_pliny_book16.txt") \
         .read_text(encoding="utf-8").split()
     pliny_decodings, pliny_unm = precompute_decodings(pliny_naibbe, inv)
-    ce_id, n_lat = score_permutation(list(range(len(ALPHABET))),
-                                      pliny_decodings, latin_log_p, latin_log_marg)
+    pliny_flat = flatten_decodings(pliny_decodings)
+    ce_id = score_perm_fast(identity_perm, pliny_flat, *LM["Latin"])
     print(f"  {len(pliny_naibbe)} tokens, {pliny_unm} unmatched, "
-          f"{n_lat} letters, CE under Latin = {ce_id:.4f} bits/letter (identity perm)")
+          f"{pliny_flat.size} letters, CE under Latin = {ce_id:.4f} bits/letter "
+          f"(identity perm)", flush=True)
 
-    # ---- MCMC sanity: starting from random perm, can we recover identity
-    #      cross-entropy on Naibbe(Pliny)?
-    print("\n--- MCMC sanity: random perm -> recover good CE on Naibbe(Pliny) ---")
+    # ---- MCMC sanity: random perm -> recover good CE on Naibbe(Pliny) ----
+    print("\n--- MCMC sanity: random perm -> recover good CE on Naibbe(Pliny) ---", flush=True)
     rng = random.Random(12345)
-    random_perm = list(range(len(ALPHABET)))
+    random_perm = list(range(n))
     rng.shuffle(random_perm)
-    print(f"  Initial random perm: {[ALPHABET[random_perm[i]] for i in range(len(ALPHABET))]}")
-    ce_init, _ = score_permutation(random_perm, pliny_decodings,
-                                    latin_log_p, latin_log_marg)
-    print(f"  Initial random-perm CE = {ce_init:.4f}")
-    best_perm, best_ce, _ = sa_search(
-        pliny_decodings[:5000], latin_log_p, latin_log_marg,
-        n_iters=30000, init_perm=random_perm, seed=1, verbose=True)
-    print(f"  Recovered perm: {[ALPHABET[best_perm[i]] for i in range(len(ALPHABET))]}")
-    print(f"  Recovered CE = {best_ce:.4f}")
-    sample = apply_perm(best_perm, pliny_decodings[:200])
-    print(f"  Decoded sample: {sample[:300]}")
+    print(f"  Initial random perm: {[ALPHABET[random_perm[i]] for i in range(n)]}", flush=True)
+    ce_init = score_perm_fast(np.array(random_perm), pliny_flat, *LM["Latin"])
+    print(f"  Initial random-perm CE = {ce_init:.4f}", flush=True)
+    sanity_perm, sanity_ce = sa_search(
+        pliny_flat[:60000], LM["Latin"][0], LM["Latin"][1],
+        n_iters=40000, init_perm=random_perm, seed=1, verbose=True)
+    print(f"  Recovered perm: {[ALPHABET[sanity_perm[i]] for i in range(n)]}", flush=True)
+    print(f"  Recovered CE = {sanity_ce:.4f}", flush=True)
+    sample = apply_perm_str(sanity_perm, pliny_decodings[:120])
+    print(f"  Decoded sample: {sample[:300]}", flush=True)
 
-    # ---- B-system MCMC under Latin LM ----
-    print("\n--- B-system MCMC search under Latin LM ---")
+    # ---- B-system MCMC ----
+    print("\n--- B-system MCMC search under Latin LM ---", flush=True)
     B = load_dialect("B")
     B_decodings, B_unm = precompute_decodings(B, inv)
-    print(f"  {len(B)} Voynichese words, {B_unm} unmatched")
+    B_flat = flatten_decodings(B_decodings)
+    print(f"  {len(B)} Voynichese words, {B_unm} unmatched, "
+          f"{B_flat.size} decoded letters", flush=True)
 
-    # multiple restarts; take the best
-    best_overall_perm = None
-    best_overall_ce = float("inf")
+    best_perm = None
+    best_ce = float("inf")
     for restart in range(4):
         if restart == 0:
-            init = list(range(len(ALPHABET)))  # identity (Greshko)
+            init = list(range(n))
             label = "identity"
         else:
-            init = list(range(len(ALPHABET)))
+            init = list(range(n))
             rng = random.Random(100 + restart)
             rng.shuffle(init)
             label = f"random{restart}"
-        print(f"\n  Restart {restart} ({label}):")
-        ce_init, _ = score_permutation(init, B_decodings,
-                                        latin_log_p, latin_log_marg)
-        print(f"    initial CE = {ce_init:.4f}")
-        bp, bc, _ = sa_search(B_decodings, latin_log_p, latin_log_marg,
-                              n_iters=80000, init_perm=init,
-                              seed=2000 + restart, verbose=False)
-        print(f"    best CE = {bc:.4f}")
-        if bc < best_overall_ce:
-            best_overall_ce = bc
-            best_overall_perm = bp
+        ce_i = score_perm_fast(np.array(init), B_flat, *LM["Latin"])
+        print(f"\n  Restart {restart} ({label}): initial CE = {ce_i:.4f}", flush=True)
+        bp, bc = sa_search(B_flat, LM["Latin"][0], LM["Latin"][1],
+                           n_iters=60000, init_perm=init,
+                           seed=2000 + restart, verbose=(restart == 0))
+        print(f"    best CE = {bc:.4f}", flush=True)
+        if bc < best_ce:
+            best_ce = bc
+            best_perm = bp
 
-    print(f"\n  >>> Best B-MCMC permutation:")
-    perm = best_overall_perm
+    print(f"\n  >>> Best B-MCMC permutation:", flush=True)
     print(f"    Greshko-letter -> recovered-letter map:")
     for i, c in enumerate(ALPHABET):
-        print(f"      {c} -> {ALPHABET[perm[i]]}")
-    print(f"    best CE under Latin = {best_overall_ce:.4f} bits/letter")
+        print(f"      {c} -> {ALPHABET[best_perm[i]]}")
+    print(f"    best CE under Latin = {best_ce:.4f} bits/letter", flush=True)
 
-    # score under all four LMs
-    ce_lat, _ = score_permutation(perm, B_decodings, latin_log_p, latin_log_marg)
-    ce_ita, _ = score_permutation(perm, B_decodings, italian_log_p, italian_log_marg)
-    ce_fin, _ = score_permutation(perm, B_decodings, finnish_log_p, finnish_log_marg)
-    ce_eng, _ = score_permutation(perm, B_decodings, english_log_p, english_log_marg)
-    print(f"    CE under Latin   = {ce_lat:.4f}")
-    print(f"    CE under Italian = {ce_ita:.4f}")
-    print(f"    CE under Finnish = {ce_fin:.4f}")
-    print(f"    CE under English = {ce_eng:.4f}")
+    ce_lat = score_perm_fast(best_perm, B_flat, *LM["Latin"])
+    ce_ita = score_perm_fast(best_perm, B_flat, *LM["Italian"])
+    ce_fin = score_perm_fast(best_perm, B_flat, *LM["Finnish"])
+    ce_eng = score_perm_fast(best_perm, B_flat, *LM["English"])
+    print(f"    CE under Latin   = {ce_lat:.4f}", flush=True)
+    print(f"    CE under Italian = {ce_ita:.4f}", flush=True)
+    print(f"    CE under Finnish = {ce_fin:.4f}", flush=True)
+    print(f"    CE under English = {ce_eng:.4f}", flush=True)
 
-    decoded_B = apply_perm(perm, B_decodings)
-    print(f"\n  First 600 decoded characters of B (with spaces between Voynich-words):")
-    print(f"    {decoded_B[:600]}")
+    decoded_B = apply_perm_str(best_perm, B_decodings)
+    print(f"\n  First 600 decoded characters of B:")
+    print(f"    {decoded_B[:600]}", flush=True)
 
     # ---- A-system MCMC ----
-    print("\n--- A-system MCMC search under Latin LM ---")
+    print("\n--- A-system MCMC search under Latin LM ---", flush=True)
     A = load_dialect("A")
     A_decodings, A_unm = precompute_decodings(A, inv)
-    print(f"  {len(A)} words, {A_unm} unmatched")
-    best_a_perm, best_a_ce, _ = sa_search(
-        A_decodings, latin_log_p, latin_log_marg,
-        n_iters=80000, seed=3000, verbose=False)
-    decoded_A = apply_perm(best_a_perm, A_decodings)
-    print(f"  best CE under Latin = {best_a_ce:.4f}")
-    ce_a_ita, _ = score_permutation(best_a_perm, A_decodings, italian_log_p, italian_log_marg)
-    print(f"  best perm CE under Italian = {ce_a_ita:.4f}")
-    print(f"  First 600 chars: {decoded_A[:600]}")
+    A_flat = flatten_decodings(A_decodings)
+    print(f"  {len(A)} words, {A_unm} unmatched, {A_flat.size} letters", flush=True)
+    best_a_perm = None
+    best_a_ce = float("inf")
+    for restart in range(3):
+        init = list(range(n))
+        if restart > 0:
+            rng = random.Random(3000 + restart)
+            rng.shuffle(init)
+        bp, bc = sa_search(A_flat, LM["Latin"][0], LM["Latin"][1],
+                           n_iters=60000, init_perm=init,
+                           seed=3500 + restart, verbose=False)
+        print(f"  restart {restart}: best CE = {bc:.4f}", flush=True)
+        if bc < best_a_ce:
+            best_a_ce = bc
+            best_a_perm = bp
+    print(f"  >>> A best CE Latin = {best_a_ce:.4f}", flush=True)
+    ce_a_ita = score_perm_fast(best_a_perm, A_flat, *LM["Italian"])
+    ce_a_fin = score_perm_fast(best_a_perm, A_flat, *LM["Finnish"])
+    print(f"  A best perm CE Italian = {ce_a_ita:.4f}, Finnish = {ce_a_fin:.4f}", flush=True)
+    decoded_A = apply_perm_str(best_a_perm, A_decodings)
+    print(f"  First 600 chars: {decoded_A[:600]}", flush=True)
 
-    # ---- save ----
     out = {
         "alphabet": ALPHABET,
         "sanity_pliny_identity_ce": ce_id,
-        "B_best_perm": [ALPHABET[perm[i]] for i in range(len(ALPHABET))],
-        "B_best_perm_indices": perm,
-        "B_ce_latin": ce_lat,
-        "B_ce_italian": ce_ita,
-        "B_ce_finnish": ce_fin,
-        "B_ce_english": ce_eng,
+        "sanity_recovered_ce": sanity_ce,
+        "sanity_recovered_perm": [ALPHABET[sanity_perm[i]] for i in range(n)],
+        "B_best_perm_letters": [ALPHABET[best_perm[i]] for i in range(n)],
+        "B_best_perm_indices": [int(x) for x in best_perm],
+        "B_ce_latin": ce_lat, "B_ce_italian": ce_ita,
+        "B_ce_finnish": ce_fin, "B_ce_english": ce_eng,
         "B_decoded_first_600": decoded_B[:600],
-        "A_best_perm": [ALPHABET[best_a_perm[i]] for i in range(len(ALPHABET))],
-        "A_ce_latin": best_a_ce,
-        "A_ce_italian": ce_a_ita,
+        "A_best_perm_letters": [ALPHABET[best_a_perm[i]] for i in range(n)],
+        "A_ce_latin": best_a_ce, "A_ce_italian": ce_a_ita,
+        "A_ce_finnish": ce_a_fin,
         "A_decoded_first_600": decoded_A[:600],
     }
     (ROOT / "keysearch_results.json").write_text(

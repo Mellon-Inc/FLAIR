@@ -31,9 +31,13 @@ voynich/
 │   ├── currier_ab.py             # Currier A/B 比較 + Naibbe デコードプローブ
 │   ├── currier_ab_results.json
 │   ├── findings_decode.md        # Naibbe 逆デコード (Viterbi) レポート
+│   ├── findings_keysearch.md     # MCMC 鍵探索レポート
 │   ├── decode_naibbe.py          # 逆引き Viterbi デコーダー
 │   ├── decode_results.json
 │   ├── decoded_{A,B}_under_latin.txt
+│   ├── keysearch.py              # シミュレーテッドアニーリング鍵探索
+│   ├── keysearch_results.json
+│   ├── keysearch_decoded_{A,B}.txt
 │   ├── summary.json              # 基礎統計の機械可読版
 │   ├── voynich_families.json     # 語族 (上位 30) とスロット文法
 │   ├── graph_stats.csv           # 言語間グラフ統計の比較
@@ -111,6 +115,13 @@ python voynich/analysis/analyze.py
 - 実 Voynichese A 系統デコード: 同じく Latin 最良 (5.27) だが B より 0.22 bit/letter Latin から離れる
 - 文字頻度: B は u 8.2% / r 6.7% / s 6.2% / t 8.8% で **Latin と一致** (Italian の u 3.6% を排除)
 - Greshko 鍵そのもので実 Voynichese を読めはしない (= 鍵は構造同型だが具体内容が違う) が、**B → Latin 仮説は cross-entropy で決定的に支持**
+
+### Phase 8 — シミュレーテッドアニーリングによる鍵探索
+- 23 文字アルファベット置換 π を MCMC で最適化、Latin LM 下のクロスエントロピーを最小化
+- **サニティ**: 合成 Naibbe(Pliny) でランダム初期 (CE 6.02) → 完全 identity 復元 (CE 3.59) — MCMC は機能
+- 実 B 系統: identity (4.47) → MCMC 最良 4.37 (4 リスタート全部が ~4.37 に収束 = 大域最適)
+- **Latin 真値 3.59 まで 0.78 bits/letter のギャップ** が残る → **単一文字置換では届かない**
+- 実 Voynichese の鍵は Greshko 表に対する単純な文字置換ではない。中世 Latin LM、文脈解消 Viterbi、glyph-level 再構築が必要
 
 ## データソース
 
