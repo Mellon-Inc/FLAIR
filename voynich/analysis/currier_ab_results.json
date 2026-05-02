@@ -1,0 +1,613 @@
+{
+  "n_tokens_A": 13486,
+  "n_tokens_B": 15432,
+  "n_types_A": 4045,
+  "n_types_B": 3302,
+  "intersection_size": 1123,
+  "union_size": 6224,
+  "jaccard": 0.18043059125964012,
+  "chance_overlap_estimate": 2145.981683804627,
+  "observed_over_chance_ratio": 0.523303627647476,
+  "frac_A_tokens_in_shared_vocab": 0.7151119679667803,
+  "frac_B_tokens_in_shared_vocab": 0.7965266977708657,
+  "fdist_jsd_full": 0.4063480978802271,
+  "fdist_jsd_top1000": 0.26924988210654544,
+  "graph_A": {
+    "label": "subset",
+    "n_types": 1128,
+    "n_edges": 5602,
+    "avg_degree": 9.932624113475176,
+    "isolated_fraction": 0.025709219858156027,
+    "n_components": 44,
+    "largest_component_size": 342,
+    "largest_component_share": 0.30319148936170215,
+    "top10_component_sizes": [
+      342,
+      304,
+      164,
+      121,
+      50,
+      47,
+      28,
+      22,
+      7,
+      4
+    ],
+    "size_geq_5_components": 9,
+    "size_geq_10_components": 8,
+    "avg_clustering_coef": 0.4769979095066244
+  },
+  "graph_B": {
+    "label": "subset",
+    "n_types": 1104,
+    "n_edges": 5067,
+    "avg_degree": 9.179347826086957,
+    "isolated_fraction": 0.021739130434782608,
+    "n_components": 39,
+    "largest_component_size": 305,
+    "largest_component_share": 0.276268115942029,
+    "top10_component_sizes": [
+      305,
+      252,
+      208,
+      136,
+      67,
+      41,
+      28,
+      12,
+      12,
+      9
+    ],
+    "size_geq_5_components": 10,
+    "size_geq_10_components": 9,
+    "avg_clustering_coef": 0.48956918265272176
+  },
+  "top_words_A": [
+    [
+      "daiin",
+      529
+    ],
+    [
+      "chol",
+      277
+    ],
+    [
+      "chor",
+      173
+    ],
+    [
+      "or",
+      153
+    ],
+    [
+      "s",
+      150
+    ],
+    [
+      "aiin",
+      132
+    ],
+    [
+      "ol",
+      130
+    ],
+    [
+      "dar",
+      124
+    ],
+    [
+      "dy",
+      123
+    ],
+    [
+      "Shol",
+      118
+    ],
+    [
+      "dal",
+      105
+    ],
+    [
+      "Sho",
+      97
+    ],
+    [
+      "chy",
+      96
+    ],
+    [
+      "cThy",
+      95
+    ],
+    [
+      "chey",
+      94
+    ],
+    [
+      "ar",
+      90
+    ],
+    [
+      "y",
+      86
+    ],
+    [
+      "cheol",
+      70
+    ],
+    [
+      "Shor",
+      69
+    ],
+    [
+      "chedy",
+      69
+    ]
+  ],
+  "top_words_B": [
+    [
+      "chedy",
+      397
+    ],
+    [
+      "Shedy",
+      360
+    ],
+    [
+      "ol",
+      339
+    ],
+    [
+      "qokeedy",
+      285
+    ],
+    [
+      "qokeey",
+      245
+    ],
+    [
+      "aiin",
+      223
+    ],
+    [
+      "qokedy",
+      220
+    ],
+    [
+      "chey",
+      210
+    ],
+    [
+      "daiin",
+      204
+    ],
+    [
+      "qokaiin",
+      202
+    ],
+    [
+      "Shey",
+      177
+    ],
+    [
+      "ar",
+      162
+    ],
+    [
+      "al",
+      158
+    ],
+    [
+      "qokal",
+      145
+    ],
+    [
+      "qol",
+      141
+    ],
+    [
+      "or",
+      128
+    ],
+    [
+      "okaiin",
+      126
+    ],
+    [
+      "cheey",
+      115
+    ],
+    [
+      "otedy",
+      114
+    ],
+    [
+      "okeey",
+      113
+    ]
+  ],
+  "top_families_A_heads": [
+    [
+      "chol",
+      164,
+      2619
+    ],
+    [
+      "aiin",
+      304,
+      2586
+    ],
+    [
+      "daiin",
+      342,
+      2429
+    ],
+    [
+      "or",
+      47,
+      1187
+    ],
+    [
+      "qokeey",
+      121,
+      598
+    ],
+    [
+      "okaiin",
+      50,
+      348
+    ],
+    [
+      "qokaiin",
+      28,
+      186
+    ],
+    [
+      "qokeody",
+      22,
+      88
+    ],
+    [
+      "cheodaiin",
+      7,
+      18
+    ],
+    [
+      "qokeeol",
+      4,
+      13
+    ]
+  ],
+  "top_families_B_heads": [
+    [
+      "chedy",
+      252,
+      3311
+    ],
+    [
+      "daiin",
+      305,
+      3042
+    ],
+    [
+      "chey",
+      136,
+      2238
+    ],
+    [
+      "qokeey",
+      208,
+      2131
+    ],
+    [
+      "ol",
+      41,
+      1112
+    ],
+    [
+      "qokeedy",
+      67,
+      698
+    ],
+    [
+      "qokaiin",
+      28,
+      392
+    ],
+    [
+      "qokeeody",
+      12,
+      38
+    ],
+    [
+      "cheodaiin",
+      12,
+      28
+    ],
+    [
+      "okaral",
+      9,
+      21
+    ]
+  ],
+  "top_family_A_head": "chol",
+  "top_family_A_slots": {
+    "modal_length": 3,
+    "n_aligned_types": 164,
+    "slots": [
+      {
+        "pos": 0,
+        "alternants": [
+          [
+            "ch",
+            861
+          ],
+          [
+            "d",
+            463
+          ],
+          [
+            "Sh",
+            367
+          ],
+          [
+            "o",
+            174
+          ],
+          [
+            "cTh",
+            164
+          ],
+          [
+            "k",
+            144
+          ],
+          [
+            "t",
+            103
+          ],
+          [
+            "s",
+            83
+          ]
+        ],
+        "is_invariant": false
+      },
+      {
+        "pos": 1,
+        "alternants": [
+          [
+            "o",
+            1186
+          ],
+          [
+            "a",
+            522
+          ],
+          [
+            "e",
+            321
+          ],
+          [
+            "d",
+            111
+          ],
+          [
+            "ch",
+            97
+          ],
+          [
+            "t",
+            83
+          ],
+          [
+            "k",
+            81
+          ],
+          [
+            "cKh",
+            59
+          ]
+        ],
+        "is_invariant": false
+      },
+      {
+        "pos": 2,
+        "alternants": [
+          [
+            "l",
+            781
+          ],
+          [
+            "y",
+            755
+          ],
+          [
+            "r",
+            700
+          ],
+          [
+            "m",
+            123
+          ],
+          [
+            "o",
+            109
+          ],
+          [
+            "s",
+            69
+          ],
+          [
+            "n",
+            32
+          ],
+          [
+            "d",
+            18
+          ]
+        ],
+        "is_invariant": false
+      }
+    ]
+  },
+  "top_family_B_head": "chedy",
+  "top_family_B_slots": {
+    "modal_length": 4,
+    "n_aligned_types": 252,
+    "slots": [
+      {
+        "pos": 0,
+        "alternants": [
+          [
+            "ch",
+            951
+          ],
+          [
+            "Sh",
+            692
+          ],
+          [
+            "o",
+            633
+          ],
+          [
+            "a",
+            288
+          ],
+          [
+            "q",
+            179
+          ],
+          [
+            "l",
+            154
+          ],
+          [
+            "d",
+            100
+          ],
+          [
+            "k",
+            94
+          ]
+        ],
+        "is_invariant": false
+      },
+      {
+        "pos": 1,
+        "alternants": [
+          [
+            "e",
+            1589
+          ],
+          [
+            "t",
+            284
+          ],
+          [
+            "k",
+            265
+          ],
+          [
+            "o",
+            251
+          ],
+          [
+            "i",
+            251
+          ],
+          [
+            "ch",
+            166
+          ],
+          [
+            "a",
+            128
+          ],
+          [
+            "l",
+            107
+          ]
+        ],
+        "is_invariant": false
+      },
+      {
+        "pos": 2,
+        "alternants": [
+          [
+            "d",
+            951
+          ],
+          [
+            "a",
+            606
+          ],
+          [
+            "e",
+            548
+          ],
+          [
+            "o",
+            399
+          ],
+          [
+            "i",
+            352
+          ],
+          [
+            "k",
+            161
+          ],
+          [
+            "cKh",
+            78
+          ],
+          [
+            "t",
+            77
+          ]
+        ],
+        "is_invariant": false
+      },
+      {
+        "pos": 3,
+        "alternants": [
+          [
+            "y",
+            1825
+          ],
+          [
+            "l",
+            533
+          ],
+          [
+            "r",
+            469
+          ],
+          [
+            "n",
+            277
+          ],
+          [
+            "m",
+            65
+          ],
+          [
+            "o",
+            61
+          ],
+          [
+            "s",
+            42
+          ],
+          [
+            "d",
+            35
+          ]
+        ],
+        "is_invariant": false
+      }
+    ]
+  }
+}

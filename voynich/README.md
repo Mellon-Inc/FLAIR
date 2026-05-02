@@ -25,8 +25,11 @@ voynich/
 │   ├── findings_laafu.md         # LAAFU レポート
 │   ├── findings_generative.md    # 生成ヌルモデル検証レポート
 │   ├── findings_naibbe.md        # Naibbe 暗号比較レポート
+│   ├── findings_currier_ab.md    # Currier A/B 二方言レポート
 │   ├── naibbe_compare.py         # Naibbe 出力 vs 実 Voynichese 比較スクリプト
 │   ├── naibbe_comparison.{json,csv} # 比較結果
+│   ├── currier_ab.py             # Currier A/B 比較 + Naibbe デコードプローブ
+│   ├── currier_ab_results.json
 │   ├── summary.json              # 基礎統計の機械可読版
 │   ├── voynich_families.json     # 語族 (上位 30) とスロット文法
 │   ├── graph_stats.csv           # 言語間グラフ統計の比較
@@ -84,6 +87,18 @@ python voynich/analysis/analyze.py
 - 位置選好も完全再現: q@99% 語頭、n@97% 語尾、i@100% 語中 — 全て一致
 - 残された非整合: 反復率 (Real 0.92% / Naibbe 0.16%)、Hapax 比 (Real 0.69 / Naibbe 0.41)
 - → **「Voynichese = 15 世紀型 verbose homophonic substitution cipher」仮説への強い経験的支持**
+
+### Phase 6 — Currier A/B 二方言の暗号構造比較
+- A 系統 (Herbal + Pharmaceutical) と B 系統 (Biological + Recipes) を分離
+- 語彙重複: Jaccard 18%、ただしトークンの 71-80% は共通語彙 → **共通コア + 各自固有のロングテール**
+- 頻度分布 JSD = 0.41 (全語彙) — 同じ語を使っても頻度が根本的に違う
+- 語族グラフ構造はほぼ同一 (avg_deg A 9.9 / B 9.2、最大成分占有率も近い)
+- **Naibbe コードブックでデコードプローブ**:
+  - B は Naibbe テーブルに 81% 適合、A は 68% 適合
+  - B の平文文字推定: i 11%, e 10%, r 7%, t 7%, s 7% — **古典ラテン語の文字頻度**
+  - A の平文文字推定: a 9%, n 7%, r 6%, d 5%, e 5% — ラテン語ではない (中世イタリア語的?)
+  - B は **alpha-table 主体・unigram 多用**、A は **beta/gamma 均等・bigram 多用**
+- → **同一暗号鍵で平文言語が違う**仮説と整合 (B が古典ラテン語、A が中世イタリア語または別の言語/文体)
 
 ## データソース
 
