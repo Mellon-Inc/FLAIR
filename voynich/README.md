@@ -45,6 +45,10 @@ voynich/
 │   ├── homophonic_bigram_results.json
 │   ├── homophonic_decoded_B.txt
 │   ├── homophonic_bigram_decoded_B.txt
+│   ├── findings_viterbi.md       # Phase 10 Viterbi レポート
+│   ├── viterbi_decode.py         # Greshko Viterbi + 置換 SA
+│   ├── viterbi_results.json
+│   ├── viterbi_decoded_B.txt
 │   ├── summary.json              # 基礎統計の機械可読版
 │   ├── voynich_families.json     # 語族 (上位 30) とスロット文法
 │   ├── graph_stats.csv           # 言語間グラフ統計の比較
@@ -140,6 +144,14 @@ python voynich/analysis/analyze.py
   - okaiin → **ia**, otaiin → **ta** — すべて Latin の典型的語尾
 - Italian LM 評価 4.87 vs Latin LM 4.14 (0.73 bit 差) → **Italian は完全に否定**
 - 完全な Latin 単語復元はまだ不可能 (Naibbe の内在的多義性)。HMM/CRF レベルの文脈デコードが必要
+
+### Phase 10 — HMM Viterbi over Greshko candidates + 置換 SA
+- 各 Voynichese 語に Greshko 表から複数の (letter sequence) 候補を生成、Latin LM 文脈で Viterbi 選択
+- **サニティ**: 合成 Naibbe(Pliny) を Viterbi デコードで CE 3.57 (Latin true 3.59) → **完全に Pliny 第 16 巻 第 1 章「果樹について」の冒頭が読める形で復元**
+- 実 B 系統 Viterbi (Greshko identity 鍵): CE 4.23 (Phase 9 の 4.14 より僅かに悪い)
+- 置換 SA は identity から動かない (= Greshko の文字割り当ては正しい)
+- 16% の B 語は Greshko 表に無い (OOV) → **glyph 文字列は Greshko 表と違う**
+- 結論: 暗号構造・文字割り当ては Greshko Naibbe と一致、但し具体的 glyph 文字列のみ違う
 
 ## データソース
 
