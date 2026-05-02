@@ -164,11 +164,16 @@ Greshko Naibbe コードブックから逆引きマップ + 4 言語 LM で実 V
 
 → **暗号構造・文字割り当ては Greshko Naibbe と一致、glyph 文字列のみ違う**。
 
-### Phase 11 — EM 型 multi-candidate Viterbi (進行中)
+### Phase 11 — EM 型 multi-candidate Viterbi (negative result)
 
-各 Voynichese 語に複数候補 (K=3) を持たせ、Viterbi で文脈選択 + SA で候補集合を学習。Phase 9 (data-driven) と Phase 10 (Viterbi) を融合。
+各 Voynichese 語に K=3 候補を持たせ、Viterbi で文脈選択 + SA で候補集合を学習。Phase 9 と Phase 10 の融合。
 
-(結果は実行完了後に追記)
+ランダム初期化からの SA は、本プロジェクトの計算予算 (2500 反復 @ 3.9 it/s) では:
+
+- 合成 Naibbe(Pliny) サニティ CE 4.54 で plateau (Phase 9 の 4.03 より悪い)
+- Phase 9 の 120 倍の探索ステップ数を要するため、同等以下の結果しか得られない
+
+→ **Phase 11 アプローチは原理的には正しいが、より大規模な計算 / smart init / 別の最適化手法 (EM ループ、relaxed cipher matrix への gradient descent、制約充足) が必要**。本プロジェクトの計算予算では Phase 9 が最良到達点。
 
 ---
 

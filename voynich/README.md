@@ -46,9 +46,11 @@ voynich/
 │   ├── homophonic_decoded_B.txt
 │   ├── homophonic_bigram_decoded_B.txt
 │   ├── findings_viterbi.md       # Phase 10 Viterbi レポート
+│   ├── findings_em.md            # Phase 11 EM レポート (negative result)
 │   ├── viterbi_decode.py         # Greshko Viterbi + 置換 SA
 │   ├── viterbi_results.json
 │   ├── viterbi_decoded_B.txt
+│   ├── em_decode.py              # EM 多候補 Viterbi (打ち切り)
 │   ├── summary.json              # 基礎統計の機械可読版
 │   ├── voynich_families.json     # 語族 (上位 30) とスロット文法
 │   ├── graph_stats.csv           # 言語間グラフ統計の比較
@@ -152,6 +154,13 @@ python voynich/analysis/analyze.py
 - 置換 SA は identity から動かない (= Greshko の文字割り当ては正しい)
 - 16% の B 語は Greshko 表に無い (OOV) → **glyph 文字列は Greshko 表と違う**
 - 結論: 暗号構造・文字割り当ては Greshko Naibbe と一致、但し具体的 glyph 文字列のみ違う
+
+### Phase 11 — EM 型 multi-candidate Viterbi (negative result)
+- 各 Voynichese 語に K=3 候補を持たせ Viterbi 選択 + SA で候補集合学習 (Phase 9+10 融合)
+- 計算コストが Viterbi 走査で跳ね上がる (3.9 it/s vs Phase 9 の 2900 it/s = 750× 遅い)
+- ランダム初期化からの SA は CE 4.54 で plateau (Phase 9 の 4.03 より悪い)
+- → **アプローチは原理的に正しいが、大規模計算 / smart init / 別手法 (EM, gradient on relaxed cipher matrix) が必要**
+- **Phase 9 が本プロジェクトの最良到達点**: 実 B CE 4.14 (Latin true 3.59 まで 0.55 bit gap)
 
 ## データソース
 
