@@ -1,0 +1,189 @@
+{
+  "alphabet": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "q",
+    "r",
+    "s",
+    "t",
+    "u",
+    "v",
+    "x",
+    "y",
+    "z"
+  ],
+  "n_top_vocab": 500,
+  "sanity": {
+    "ce_init": 5.27900439952194,
+    "ce_recovered": 4.226234948414989,
+    "sample": "i**a*isdoear*e*tsurinsadeied**c***this*bidln*nyd*e**anitunei**o**niaea**rfg**tviart****itedfea**irhe*s*ear*ruraivi*to*pa*af*rb*su***s*ir*e*nl*psaisz*e*c**igoa*aeeitvtr***a*atgrliaid*ietiir*od*cah*ra*i"
+  },
+  "B_best_ce_latin": 4.23939492269655,
+  "B_best_ce_italian": 5.098918335747465,
+  "B_best_ce_finnish": 4.872977195015995,
+  "B_decoded_first_1000": "u*iiuiici*a**gi**fl*ra**cisiaiiin*itiiaiapa*eiliai*iimbiace*ismael*pxigi*i*issefuii*srmir**r*iisisiiais*ssihii*i*isiigiin**aioadia**iio***xiunani*evchni**itaiaei*ii*e**iciyii*inivp*i*niuis*ucilsii*uocisci****r*i*iesfviinirsneaibices*iancaii*lmaicrci*im*dasiielsi*aii**iiiiimniife**aiuiiifaipiiiiiisnsiamiiissspse*biissiipieae*iiiiase*ira*zds*asip*iiuiivicse*icmts*sac*ueretassscipiriacx******aeeiorsr***rciiaa*srs*fsfaic*iszeerair*terieiscui*igeaas*neie*d*aic*grcl*fef*nsss*ia**pi*o**ii******i*s*i*is**m****asa**r*tueaaig*rd*ieri*xquami*r*nnataraeiii*ianniasaiuiziiii*iiiianssa*iu*it**aa*niiraevsn*isiiininca*iigacaeiieasxusss*iaigigiiiisiihitisfn*igiiatmisinsgofabzu*sa*tbz*dvio*etioprneaici*nsiiircc*taasiioium*ipyi*aaneagexerrc**cm*iaga**aie*ia****f***eizd***cstint*iiiaecfreprii*soxa*esdaerimiienisudeerivn*liieeeicgipesi*tsrtiniic**riia*gcsiuni**veicclvitaiuyztuaea*ivsildetitt*ui*i*isiafxicu*e*i*iniisi***iiiiiiima*deiuaiuss*m**auexb*iii*asiiisvetixia*na**c*xisic*eiusese*beue*ciaa*tetsgiez*usi",
+  "B_top_30_assignments": [
+    {
+      "word": "chedy",
+      "count": 398,
+      "letter": "i"
+    },
+    {
+      "word": "shedy",
+      "count": 361,
+      "letter": "i"
+    },
+    {
+      "word": "ol",
+      "count": 341,
+      "letter": "i"
+    },
+    {
+      "word": "qokeedy",
+      "count": 287,
+      "letter": "i"
+    },
+    {
+      "word": "qokain",
+      "count": 262,
+      "letter": "i"
+    },
+    {
+      "word": "qokeey",
+      "count": 246,
+      "letter": "i"
+    },
+    {
+      "word": "aiin",
+      "count": 223,
+      "letter": "i"
+    },
+    {
+      "word": "qokedy",
+      "count": 222,
+      "letter": "s"
+    },
+    {
+      "word": "chey",
+      "count": 212,
+      "letter": "e"
+    },
+    {
+      "word": "daiin",
+      "count": 205,
+      "letter": "t"
+    },
+    {
+      "word": "qokaiin",
+      "count": 202,
+      "letter": "t"
+    },
+    {
+      "word": "shey",
+      "count": 180,
+      "letter": "i"
+    },
+    {
+      "word": "ar",
+      "count": 163,
+      "letter": "t"
+    },
+    {
+      "word": "al",
+      "count": 158,
+      "letter": "e"
+    },
+    {
+      "word": "qokal",
+      "count": 146,
+      "letter": "r"
+    },
+    {
+      "word": "qol",
+      "count": 142,
+      "letter": "n"
+    },
+    {
+      "word": "or",
+      "count": 128,
+      "letter": "a"
+    },
+    {
+      "word": "okaiin",
+      "count": 127,
+      "letter": "t"
+    },
+    {
+      "word": "okain",
+      "count": 120,
+      "letter": "s"
+    },
+    {
+      "word": "cheey",
+      "count": 116,
+      "letter": "s"
+    },
+    {
+      "word": "lchedy",
+      "count": 114,
+      "letter": "u"
+    },
+    {
+      "word": "otedy",
+      "count": 114,
+      "letter": "e"
+    },
+    {
+      "word": "okeey",
+      "count": 113,
+      "letter": "a"
+    },
+    {
+      "word": "dar",
+      "count": 108,
+      "letter": "i"
+    },
+    {
+      "word": "dain",
+      "count": 99,
+      "letter": "c"
+    },
+    {
+      "word": "dal",
+      "count": 94,
+      "letter": "a"
+    },
+    {
+      "word": "qokar",
+      "count": 88,
+      "letter": "i"
+    },
+    {
+      "word": "qoky",
+      "count": 88,
+      "letter": "a"
+    },
+    {
+      "word": "okeedy",
+      "count": 87,
+      "letter": "a"
+    },
+    {
+      "word": "otaiin",
+      "count": 86,
+      "letter": "d"
+    }
+  ]
+}
