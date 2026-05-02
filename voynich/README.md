@@ -32,12 +32,19 @@ voynich/
 │   ├── currier_ab_results.json
 │   ├── findings_decode.md        # Naibbe 逆デコード (Viterbi) レポート
 │   ├── findings_keysearch.md     # MCMC 鍵探索レポート
+│   ├── findings_homophonic.md    # homophonic 攻撃レポート (Phase 9)
 │   ├── decode_naibbe.py          # 逆引き Viterbi デコーダー
 │   ├── decode_results.json
 │   ├── decoded_{A,B}_under_latin.txt
 │   ├── keysearch.py              # シミュレーテッドアニーリング鍵探索
 │   ├── keysearch_results.json
 │   ├── keysearch_decoded_{A,B}.txt
+│   ├── homophonic.py             # 1-letter homophonic SA
+│   ├── homophonic_bigram.py      # 1-or-2 letter homophonic SA (本命)
+│   ├── homophonic_results.json
+│   ├── homophonic_bigram_results.json
+│   ├── homophonic_decoded_B.txt
+│   ├── homophonic_bigram_decoded_B.txt
 │   ├── summary.json              # 基礎統計の機械可読版
 │   ├── voynich_families.json     # 語族 (上位 30) とスロット文法
 │   ├── graph_stats.csv           # 言語間グラフ統計の比較
@@ -122,6 +129,17 @@ python voynich/analysis/analyze.py
 - 実 B 系統: identity (4.47) → MCMC 最良 4.37 (4 リスタート全部が ~4.37 に収束 = 大域最適)
 - **Latin 真値 3.59 まで 0.78 bits/letter のギャップ** が残る → **単一文字置換では届かない**
 - 実 Voynichese の鍵は Greshko 表に対する単純な文字置換ではない。中世 Latin LM、文脈解消 Viterbi、glyph-level 再構築が必要
+
+### Phase 9 — Greshko 表に依存しない homophonic 攻撃 (★ 最良結果)
+- 上位 500 Voynichese 語タイプを未知記号として扱い、各々を 1 または 2 平文文字に割り当てる SA 攻撃
+- **サニティ**: 合成 Naibbe(Pliny) bigram モード CE 4.03 (Latin true 3.59 まで内在的曖昧性 0.44 bit が残る)
+- **実 B 系統最良 CE 4.14** (3 リスタート 4.14-4.16 で完全収束)、合成 Naibbe との差 **わずか 0.11 bit/letter**
+- **学習された割り当てが Latin 形態素体系と一致**:
+  - chedy → **es**, shedy → **er**, qokeedy → **es**, qokain → **is**, qokeey → **is**
+  - aiin → **en**, daiin → **qu**, qokaiin → **am**, qokal → **us**, dal → **us**
+  - okaiin → **ia**, otaiin → **ta** — すべて Latin の典型的語尾
+- Italian LM 評価 4.87 vs Latin LM 4.14 (0.73 bit 差) → **Italian は完全に否定**
+- 完全な Latin 単語復元はまだ不可能 (Naibbe の内在的多義性)。HMM/CRF レベルの文脈デコードが必要
 
 ## データソース
 

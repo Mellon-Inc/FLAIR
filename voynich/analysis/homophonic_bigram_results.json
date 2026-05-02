@@ -1,0 +1,215 @@
+{
+  "alphabet": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "q",
+    "r",
+    "s",
+    "t",
+    "u",
+    "v",
+    "x",
+    "y",
+    "z"
+  ],
+  "n_top_vocab": 500,
+  "sanity_synthetic_pliny_ce": 4.030031701505868,
+  "sanity_sample_first_300": "in**e*iiaeonath*er*emeeiinotitincatelite**mo***udariz*xbfsnie*zcs*it**sqcicteererne**i**veinvers**ytbgb**rizitsact****aemauzsers**neimat*c*atei*iesxtcan*ris*lt*ti*erl*ide***id*erh*h*erni*qmepmla*it*e**igbus*magerfcivapem***t*eemtcqacitpe*iervredsa*se*gbuar*sand*ed",
+  "B_best_ce_latin": 4.14276582599489,
+  "B_best_ce_italian": 4.8748332669529875,
+  "B_decoded_first_1000": "u*innuneroov*rc**nis**nix*rve**cpslidoveovesovi*tuterertisooe*lispesou*esicsesooi*ispiaslp*spaiggi*n*ispidnisesis*idusserdh**us*teraovidererousd*ssistaeer*is*ispisaobeisis**eersdoxit**isesd***lderoagtiser*ntervisov**isrddovmyiai*ovis*i**erevpgdovis*ovieseo*is*isesoisa*maeverneoiesnn*sooeraoer****g*er*aeridiensuisagerqmisdtessesotid*eraisoieses*grpuisousoes*ers*xpupierissi*useris**erierrisiisesisnp**preleaaernigisliseeerieridagsdespusaeeidsidlssl*sesesssesrdfesslvn*eeriserussdz*esano*rxs*roaedf*uxisqauxvfeiser*abmnypid*oipui*leeraeriapusasoerecesogiazbd******rbddvdrsr***nonisprus*pbp*deoiniiiszb*eraxymsslususerth*lyeraacoestise*egerorbs*isieri*f*eer*musox*ieri*isdss*eso**der*ia**esis******er*sd*gi*isd**i****usidus**us*rlefmiusiu*yxd*aiocuse*ncllcisn*pi*maisttxtuseiieren*isusisisertauseratishpgierisov*eroverovoisane*erat*isia**ae*agovisagixidis*erdiseresisesisprc*qigmyexacoisisnoiddumdss*isusaigishoiseerersesitauxtxesoivho*ermiausquprovnuesisagemyteshpr*so*scsb*nlerth*slquerzoauisipuuxrf",
+  "B_top_30_assignments": [
+    {
+      "word": "chedy",
+      "count": 398,
+      "letters": "es",
+      "arity": 2
+    },
+    {
+      "word": "shedy",
+      "count": 361,
+      "letters": "er",
+      "arity": 2
+    },
+    {
+      "word": "ol",
+      "count": 341,
+      "letters": "er",
+      "arity": 2
+    },
+    {
+      "word": "qokeedy",
+      "count": 287,
+      "letters": "es",
+      "arity": 2
+    },
+    {
+      "word": "qokain",
+      "count": 262,
+      "letters": "is",
+      "arity": 2
+    },
+    {
+      "word": "qokeey",
+      "count": 246,
+      "letters": "is",
+      "arity": 2
+    },
+    {
+      "word": "aiin",
+      "count": 223,
+      "letters": "en",
+      "arity": 2
+    },
+    {
+      "word": "qokedy",
+      "count": 222,
+      "letters": "s",
+      "arity": 1
+    },
+    {
+      "word": "chey",
+      "count": 212,
+      "letters": "i",
+      "arity": 1
+    },
+    {
+      "word": "daiin",
+      "count": 205,
+      "letters": "qu",
+      "arity": 2
+    },
+    {
+      "word": "qokaiin",
+      "count": 202,
+      "letters": "am",
+      "arity": 2
+    },
+    {
+      "word": "shey",
+      "count": 180,
+      "letters": "ov",
+      "arity": 2
+    },
+    {
+      "word": "ar",
+      "count": 163,
+      "letters": "r",
+      "arity": 1
+    },
+    {
+      "word": "al",
+      "count": 158,
+      "letters": "ol",
+      "arity": 2
+    },
+    {
+      "word": "qokal",
+      "count": 146,
+      "letters": "us",
+      "arity": 2
+    },
+    {
+      "word": "qol",
+      "count": 142,
+      "letters": "is",
+      "arity": 2
+    },
+    {
+      "word": "or",
+      "count": 128,
+      "letters": "e",
+      "arity": 1
+    },
+    {
+      "word": "okaiin",
+      "count": 127,
+      "letters": "ia",
+      "arity": 2
+    },
+    {
+      "word": "okain",
+      "count": 120,
+      "letters": "nu",
+      "arity": 2
+    },
+    {
+      "word": "cheey",
+      "count": 116,
+      "letters": "a",
+      "arity": 1
+    },
+    {
+      "word": "lchedy",
+      "count": 114,
+      "letters": "s",
+      "arity": 1
+    },
+    {
+      "word": "otedy",
+      "count": 114,
+      "letters": "er",
+      "arity": 2
+    },
+    {
+      "word": "okeey",
+      "count": 113,
+      "letters": "e",
+      "arity": 1
+    },
+    {
+      "word": "dar",
+      "count": 108,
+      "letters": "e",
+      "arity": 1
+    },
+    {
+      "word": "dain",
+      "count": 99,
+      "letters": "o",
+      "arity": 1
+    },
+    {
+      "word": "dal",
+      "count": 94,
+      "letters": "us",
+      "arity": 2
+    },
+    {
+      "word": "qokar",
+      "count": 88,
+      "letters": "i",
+      "arity": 1
+    },
+    {
+      "word": "qoky",
+      "count": 88,
+      "letters": "o",
+      "arity": 1
+    },
+    {
+      "word": "okeedy",
+      "count": 87,
+      "letters": "a",
+      "arity": 1
+    },
+    {
+      "word": "otaiin",
+      "count": 86,
+      "letters": "ta",
+      "arity": 2
+    }
+  ]
+}
