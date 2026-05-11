@@ -4,9 +4,9 @@
 [![PyPI](https://img.shields.io/pypi/v/flaircast)](https://pypi.org/project/flaircast/)
 [![Python](https://img.shields.io/pypi/pyversions/flaircast)](https://pypi.org/project/flaircast/)
 <a href="https://pepy.tech/projects/flaircast"><img src="https://static.pepy.tech/personalized-badge/flaircast?period=total&units=INTERNATIONAL_SYSTEM&left_color=GRAY&right_color=RED&left_text=downloads" alt="PyPI Downloads"></a>
-[![CI](https://github.com/TakatoHonda/FLAIR/actions/workflows/ci.yml/badge.svg)](https://github.com/TakatoHonda/FLAIR/actions/workflows/ci.yml)
-[![License](https://img.shields.io/github/license/TakatoHonda/FLAIR)](LICENSE)
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TakatoHonda/FLAIR/blob/main/examples/quickstart.ipynb)
+[![CI](https://github.com/Mellon-Inc/FLAIR/actions/workflows/ci.yml/badge.svg)](https://github.com/Mellon-Inc/FLAIR/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/Mellon-Inc/FLAIR)](LICENSE)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Mellon-Inc/FLAIR/blob/main/examples/quickstart.ipynb)
 
 [日本語版はこちら](README_ja.md)
 
@@ -87,7 +87,7 @@ pip install flaircast
 Or install from source:
 
 ```bash
-git clone https://github.com/TakatoHonda/FLAIR.git
+git clone https://github.com/Mellon-Inc/FLAIR.git
 cd FLAIR
 pip install .
 ```
@@ -254,7 +254,7 @@ FLAIR accepts an arbitrary number of per-step exogenous columns. The columns are
 - **Graceful degradation**: passing pure-noise exog inflates MASE by less than 1% on average, with bounded worst-case behavior.
 - **Limitation**: exog is coupled to the Level (per-period) factor only. Intra-period variation in `X` (e.g. hourly temperature within a daily period) is collapsed by the period mean and is not captured.
 
-End-to-end walkthrough on the UCI Bike Sharing dataset: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TakatoHonda/FLAIR/blob/main/examples/exogenous_variables.ipynb)
+End-to-end walkthrough on the UCI Bike Sharing dataset: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Mellon-Inc/FLAIR/blob/main/examples/exogenous_variables.ipynb)
 
 ### Constants
 

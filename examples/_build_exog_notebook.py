@@ -38,7 +38,7 @@ CELLS: list[dict] = [
         """\
 # FLAIR with Exogenous Variables
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TakatoHonda/FLAIR/blob/main/examples/exogenous_variables.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Mellon-Inc/FLAIR/blob/main/examples/exogenous_variables.ipynb)
 
 **Factored Level And Interleaved Ridge** — zero-hyperparameter time series forecasting *with covariates*.
 
@@ -111,7 +111,7 @@ The CSV is bundled with the FLAIR repo so this notebook is self-contained.""",
     ),
     code(
         """\
-url = "https://raw.githubusercontent.com/TakatoHonda/FLAIR/main/validation/bike_daily.csv"
+url = "https://raw.githubusercontent.com/Mellon-Inc/FLAIR/main/validation/bike_daily.csv"
 df = pd.read_csv(url, quotechar='"').sort_values("dteday").reset_index(drop=True)
 
 print(f"{len(df)} daily rows from {df['dteday'].iloc[0]} to {df['dteday'].iloc[-1]}")
@@ -315,7 +315,7 @@ In the noise control above, the MASE inflation should be **well under 5%** on av
         """\
 ---
 
-**Links**: [GitHub](https://github.com/TakatoHonda/FLAIR) · [PyPI](https://pypi.org/project/flaircast/) · [API Reference](https://github.com/TakatoHonda/FLAIR#api-reference) · [Quickstart notebook](https://colab.research.google.com/github/TakatoHonda/FLAIR/blob/main/examples/quickstart.ipynb)""",
+**Links**: [GitHub](https://github.com/Mellon-Inc/FLAIR) · [PyPI](https://pypi.org/project/flaircast/) · [API Reference](https://github.com/Mellon-Inc/FLAIR#api-reference) · [Quickstart notebook](https://colab.research.google.com/github/Mellon-Inc/FLAIR/blob/main/examples/quickstart.ipynb)""",
         cell_id="footer",
     ),
 ]

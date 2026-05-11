@@ -42,8 +42,8 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/TakatoHonda/FLAIR"
-Repository = "https://github.com/TakatoHonda/FLAIR"
+Homepage = "https://github.com/Mellon-Inc/FLAIR"
+Repository = "https://github.com/Mellon-Inc/FLAIR"
 
 [tool.hatch.build.targets.sdist]
 # Explicit include list — keep the sdist focused on what's needed to

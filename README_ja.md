@@ -4,9 +4,9 @@
 [![PyPI](https://img.shields.io/pypi/v/flaircast)](https://pypi.org/project/flaircast/)
 [![Python](https://img.shields.io/pypi/pyversions/flaircast)](https://pypi.org/project/flaircast/)
 <a href="https://pepy.tech/projects/flaircast"><img src="https://static.pepy.tech/personalized-badge/flaircast?period=total&units=INTERNATIONAL_SYSTEM&left_color=GRAY&right_color=RED&left_text=downloads" alt="PyPI Downloads"></a>
-[![CI](https://github.com/TakatoHonda/FLAIR/actions/workflows/ci.yml/badge.svg)](https://github.com/TakatoHonda/FLAIR/actions/workflows/ci.yml)
-[![License](https://img.shields.io/github/license/TakatoHonda/FLAIR)](LICENSE)
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TakatoHonda/FLAIR/blob/main/examples/quickstart.ipynb)
+[![CI](https://github.com/Mellon-Inc/FLAIR/actions/workflows/ci.yml/badge.svg)](https://github.com/Mellon-Inc/FLAIR/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/Mellon-Inc/FLAIR)](LICENSE)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Mellon-Inc/FLAIR/blob/main/examples/quickstart.ipynb)
 
 [English](README.md)
 
@@ -87,7 +87,7 @@ pip install flaircast
 ソースからインストール：
 
 ```bash
-git clone https://github.com/TakatoHonda/FLAIR.git
+git clone https://github.com/Mellon-Inc/FLAIR.git
 cd FLAIR
 pip install .
 ```
@@ -252,7 +252,7 @@ FLAIR は任意の数の per-step 外生列を受け付けます。各列は訓�
 - **graceful degradation**: 純ノイズの外生を渡しても平均 MASE 悪化は 1% 未満、最悪ケースも bounded
 - **制約**: 外生は Level (周期単位) 因子のみに結合されます。周期内の `X` の変動 (例: 1 日周期の中での時間別気温) は期間平均で潰されます
 
-UCI Bike Sharing データセットでのエンドツーエンドの walkthrough: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/TakatoHonda/FLAIR/blob/main/examples/exogenous_variables.ipynb)
+UCI Bike Sharing データセットでのエンドツーエンドの walkthrough: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Mellon-Inc/FLAIR/blob/main/examples/exogenous_variables.ipynb)
 
 ### 定数
 
