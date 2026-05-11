@@ -92,7 +92,7 @@ def _interp_nan_1d(
     boundary information), while ``X_future`` columns use the last
     valid ``X_hist`` value of the same column (one-step persistence).
     """
-    out = arr.copy()
+    out: NDArray[np.floating] = arr.copy()
     nan_mask = np.isnan(out)
     if not nan_mask.any():
         return out
@@ -203,7 +203,7 @@ def _degenerate_p1_fallback(
     if sigma < _EPS_SHAPE:
         sigma = _EPS_SHAPE
     fc_mean = float(fc.mean())
-    return np.clip(
+    return np.clip(  # type: ignore[no-any-return]
         np.array([fc + rng.normal(0, sigma, horizon) for _ in range(n_samples)]),
         fc_mean - sigma * 10,
         fc_mean + sigma * 10,
@@ -343,7 +343,7 @@ def _recover_beta(
     coefficient is ``β₂ = 1 − δ₂``.  Exogenous coefficients pass
     through unchanged.
     """
-    beta = theta.copy()
+    beta: NDArray[np.floating] = theta.copy()
     if is_diff:
         beta[nb] = 1.0 - theta[nb]
     return beta

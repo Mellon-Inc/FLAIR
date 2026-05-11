@@ -62,12 +62,12 @@ def _bc(y: NDArray[np.floating], lam: float) -> NDArray[np.floating]:
 def _bc_inv(z: NDArray[np.floating], lam: float) -> NDArray[np.floating]:
     """Inverse Box-Cox with overflow guard for both ``lam = 0`` and ``lam > 0``."""
     if lam == 0.0:
-        return np.exp(np.clip(z, -_BC_EXP_CLIP, _BC_EXP_CLIP))
+        return np.exp(np.clip(z, -_BC_EXP_CLIP, _BC_EXP_CLIP))  # type: ignore[no-any-return]
     # For lam > 0, (z*lam + 1)^(1/lam) can overflow when z is large
     # and lam is small.  Clip the base to prevent inf.
     base = np.maximum(z * lam + 1, _EPS)
     max_base = np.exp(_BC_EXP_CLIP * lam)  # exp(30 * lam) stays in float64
-    return np.minimum(base, max_base) ** (1 / lam)
+    return np.minimum(base, max_base) ** (1 / lam)  # type: ignore[no-any-return]
 
 
 # ── Ridge with Soft-Average GCV ────────────────────────────────────────
