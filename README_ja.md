@@ -1,5 +1,6 @@
 # FLAIR
 
+[![arXiv](https://img.shields.io/badge/arXiv-2605.07222-b31b1b.svg)](https://arxiv.org/abs/2605.07222)
 [![PyPI](https://img.shields.io/pypi/v/flaircast)](https://pypi.org/project/flaircast/)
 [![Python](https://img.shields.io/pypi/pyversions/flaircast)](https://pypi.org/project/flaircast/)
 <a href="https://pepy.tech/projects/flaircast"><img src="https://static.pepy.tech/personalized-badge/flaircast?period=total&units=INTERNATIONAL_SYSTEM&left_color=GRAY&right_color=RED&left_text=downloads" alt="PyPI Downloads"></a>
@@ -12,6 +13,9 @@
 **Factored Level And Interleaved Ridge**: 単一方程式の時系列予測手法
 
 ハイパーパラメータ 0。SVD 1回。CPU のみ。
+
+> **論文:** *Don't Learn the Shape: Forecasting Periodic Time Series by Rank-1 Decomposition* — Takato Honda, 2026.
+> [arXiv:2605.07222](https://arxiv.org/abs/2605.07222) · [PDF](https://arxiv.org/pdf/2605.07222) · 研究で FLAIR を使用される際は [Citation](#citation) の引用をお願いします。
 
 - **[Chronos Benchmark II](https://github.com/amazon-science/chronos-forecasting) で第1位** (25データセット・ゼロショット). Agg. Rel. MASE **0.678**, Rel. WQL **0.716** — AutoARIMA (0.742) を3.5%上回る
 - **[GIFT-Eval](https://huggingface.co/spaces/Salesforce/GIFT-Eval) でPatchTSTに匹敵** (97構成, 23データセット). relMASE **0.838** (PatchTST 0.849に勝利), relCRPS **0.587** (PatchTSTと同値)
@@ -277,10 +281,18 @@ FLAIR はあらゆるスケールで**最小記述長 (MDL)** 原理を適用し
 
 ## Citation
 
-```
-@misc{flair2026,
-  title={FLAIR: Factored Level And Interleaved Ridge for Time Series Forecasting},
-  year={2026}
+研究で FLAIR を使用される際は、以下を引用してください:
+
+```bibtex
+@misc{honda2026flair,
+  title         = {Don't Learn the Shape: Forecasting Periodic Time Series by Rank-1 Decomposition},
+  author        = {Honda, Takato},
+  year          = {2026},
+  eprint        = {2605.07222},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG},
+  doi           = {10.48550/arXiv.2605.07222},
+  url           = {https://arxiv.org/abs/2605.07222}
 }
 ```
 

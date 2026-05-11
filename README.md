@@ -1,5 +1,6 @@
 # FLAIR
 
+[![arXiv](https://img.shields.io/badge/arXiv-2605.07222-b31b1b.svg)](https://arxiv.org/abs/2605.07222)
 [![PyPI](https://img.shields.io/pypi/v/flaircast)](https://pypi.org/project/flaircast/)
 [![Python](https://img.shields.io/pypi/pyversions/flaircast)](https://pypi.org/project/flaircast/)
 <a href="https://pepy.tech/projects/flaircast"><img src="https://static.pepy.tech/personalized-badge/flaircast?period=total&units=INTERNATIONAL_SYSTEM&left_color=GRAY&right_color=RED&left_text=downloads" alt="PyPI Downloads"></a>
@@ -12,6 +13,9 @@
 **Factored Level And Interleaved Ridge**: a single-equation time series forecasting method.
 
 Zero hyperparameters. One SVD. CPU only.
+
+> **Paper:** *Don't Learn the Shape: Forecasting Periodic Time Series by Rank-1 Decomposition* — Takato Honda, 2026.
+> [arXiv:2605.07222](https://arxiv.org/abs/2605.07222) · [PDF](https://arxiv.org/pdf/2605.07222) · If you use FLAIR in your research, please [cite the paper](#citation).
 
 - **#1 on [Chronos Benchmark II](https://github.com/amazon-science/chronos-forecasting)** (25 zero-shot datasets). Agg. Rel. MASE **0.678**, Rel. WQL **0.716** — beats AutoARIMA (0.742) by 3.5%
 - **Matches PatchTST on [GIFT-Eval](https://huggingface.co/spaces/Salesforce/GIFT-Eval)** (97 configs, 23 datasets). relMASE **0.838** (beats PatchTST 0.849), relCRPS **0.587** (ties PatchTST)
@@ -281,10 +285,18 @@ FLAIR applies the **Minimum Description Length** principle at every scale:
 
 ## Citation
 
-```
-@misc{flair2026,
-  title={FLAIR: Factored Level And Interleaved Ridge for Time Series Forecasting},
-  year={2026}
+If you use FLAIR in your research, please cite:
+
+```bibtex
+@misc{honda2026flair,
+  title         = {Don't Learn the Shape: Forecasting Periodic Time Series by Rank-1 Decomposition},
+  author        = {Honda, Takato},
+  year          = {2026},
+  eprint        = {2605.07222},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG},
+  doi           = {10.48550/arXiv.2605.07222},
+  url           = {https://arxiv.org/abs/2605.07222}
 }
 ```
 
