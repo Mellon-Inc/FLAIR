@@ -55,19 +55,42 @@ import pandas as pd
 
 # Common token suffixes/substrings that indicate a temporally-shifted target.
 _LEAK_TOKENS = (
-    "_lag", "_bfr", "_before", "_lead", "_ahead", "_prev", "_next",
-    "_yesterday", "_tomorrow", "_t-1", "_t+1", "_lookback", "_future",
+    "_lag",
+    "_bfr",
+    "_before",
+    "_lead",
+    "_ahead",
+    "_prev",
+    "_next",
+    "_yesterday",
+    "_tomorrow",
+    "_t-1",
+    "_t+1",
+    "_lookback",
+    "_future",
 )
 
 # pandas freq alias → FLAIR-compatible freq string.
 _PANDAS_TO_FLAIR_FREQ = {
-    "H": "H", "h": "H",
+    "H": "H",
+    "h": "H",
     "D": "D",
-    "W": "W", "W-SUN": "W", "W-MON": "W",
-    "M": "M", "MS": "M", "ME": "M",
-    "Q": "Q", "QS": "Q", "QE": "Q",
-    "Y": "Y", "A": "Y", "YS": "Y", "YE": "Y", "AS": "Y",
-    "T": "T", "min": "T",
+    "W": "W",
+    "W-SUN": "W",
+    "W-MON": "W",
+    "M": "M",
+    "MS": "M",
+    "ME": "M",
+    "Q": "Q",
+    "QS": "Q",
+    "QE": "Q",
+    "Y": "Y",
+    "A": "Y",
+    "YS": "Y",
+    "YE": "Y",
+    "AS": "Y",
+    "T": "T",
+    "min": "T",
     "S": "S",
 }
 
@@ -119,7 +142,7 @@ def _classify_column(series: pd.Series) -> str:
         return "binary"
     if pd.api.types.is_numeric_dtype(series):
         return "numeric"
-    if isinstance(series.dtype, pd.CategoricalDtype) or series.dtype == object:
+    if isinstance(series.dtype, pd.CategoricalDtype) or pd.api.types.is_string_dtype(series):
         nunique = series.nunique(dropna=True)
         if nunique <= 1:
             return "drop"  # constant or all-NaN string
@@ -305,14 +328,10 @@ def auto_encode(
     unknown_cat = categorical_cols_set - set(df.columns)
     if unknown_cat:
         raise KeyError(
-            f"categorical_cols contains columns not in DataFrame: "
-            f"{sorted(unknown_cat)}"
+            f"categorical_cols contains columns not in DataFrame: {sorted(unknown_cat)}"
         )
     if target_col in categorical_cols_set:
-        raise KeyError(
-            f"categorical_cols cannot include the target column "
-            f"'{target_col}'"
-        )
+        raise KeyError(f"categorical_cols cannot include the target column '{target_col}'")
 
     # 1. Establish a datetime index if possible.
     if datetime_col is not None and datetime_col in df.columns:
@@ -395,10 +414,7 @@ def auto_encode(
             encoded_names.extend(dummies.columns.tolist())
             dummy_cols.update(dummies.columns.tolist())
 
-    if encoded:
-        X = np.column_stack(encoded)
-    else:
-        X = np.zeros((len(y), 0))
+    X = np.column_stack(encoded) if encoded else np.zeros((len(y), 0))
 
     elapsed = time.perf_counter() - t0
 

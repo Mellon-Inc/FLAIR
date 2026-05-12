@@ -54,7 +54,6 @@ from __future__ import annotations
 
 import numpy as np
 
-
 # ---------------------------------------------------------------------------
 # Distribution-shift detector (originally flair_autoprep.shift)
 # ---------------------------------------------------------------------------
@@ -167,8 +166,11 @@ def gated_forecast(
     from flaircast import forecast
 
     flagged = detect_shift(
-        X_hist_full, X_future_full, col_names_full,
-        threshold_z=shift_z, exclude_cols=exclude_cols,
+        X_hist_full,
+        X_future_full,
+        col_names_full,
+        threshold_z=shift_z,
+        exclude_cols=exclude_cols,
     )
     n_shift = len(flagged)
 
@@ -176,32 +178,47 @@ def gated_forecast(
     # under catastrophic shift.
     if n_shift_vanilla is not None and n_shift >= n_shift_vanilla:
         samples = forecast(
-            y_hist, horizon, freq,
-            n_samples=n_samples, seed=seed,
+            y_hist,
+            horizon,
+            freq,
+            n_samples=n_samples,
+            seed=seed,
         )
         return samples, "vanilla"
 
     if X_hist_filt is None or X_future_filt is None:
         samples = forecast(
-            y_hist, horizon, freq,
-            n_samples=n_samples, seed=seed,
-            X_hist=X_hist_full, X_future=X_future_full,
+            y_hist,
+            horizon,
+            freq,
+            n_samples=n_samples,
+            seed=seed,
+            X_hist=X_hist_full,
+            X_future=X_future_full,
         )
         return samples, "full"
 
     use_full = (n_shift >= n_shift_threshold) if invert else (n_shift < n_shift_threshold)
     if use_full:
         samples = forecast(
-            y_hist, horizon, freq,
-            n_samples=n_samples, seed=seed,
-            X_hist=X_hist_full, X_future=X_future_full,
+            y_hist,
+            horizon,
+            freq,
+            n_samples=n_samples,
+            seed=seed,
+            X_hist=X_hist_full,
+            X_future=X_future_full,
         )
         return samples, "full"
     else:
         samples = forecast(
-            y_hist, horizon, freq,
-            n_samples=n_samples, seed=seed,
-            X_hist=X_hist_filt, X_future=X_future_filt,
+            y_hist,
+            horizon,
+            freq,
+            n_samples=n_samples,
+            seed=seed,
+            X_hist=X_hist_filt,
+            X_future=X_future_filt,
         )
         return samples, "filt"
 
@@ -232,9 +249,13 @@ def _inner_val_mase(
         return float("inf")
     h = len(y_val)
     s = forecast(
-        y_train, h, freq,
-        n_samples=n_samples, seed=seed,
-        X_hist=X_hist, X_future=X_future,
+        y_train,
+        h,
+        freq,
+        n_samples=n_samples,
+        seed=seed,
+        X_hist=X_hist,
+        X_future=X_future,
     )
     pred = np.median(s, axis=0)
     naive_err = float(np.mean(np.abs(y_train[season_m:] - y_train[:-season_m])))
@@ -299,39 +320,55 @@ def residual_gate_forecast(
         X_inner_val = X_hist_full[-inner_horizon:]
 
         mase_b = _inner_val_mase(
-            y_inner_train, y_inner_val, freq, season_m,
-            X_hist=X_inner_train, X_future=X_inner_val,
-            n_samples=inner_n_samples, seed=seed,
+            y_inner_train,
+            y_inner_val,
+            freq,
+            season_m,
+            X_hist=X_inner_train,
+            X_future=X_inner_val,
+            n_samples=inner_n_samples,
+            seed=seed,
         )
         mase_a = _inner_val_mase(
-            y_inner_train, y_inner_val, freq, season_m,
-            n_samples=inner_n_samples, seed=seed,
+            y_inner_train,
+            y_inner_val,
+            freq,
+            season_m,
+            n_samples=inner_n_samples,
+            seed=seed,
         )
 
-        if (
-            np.isfinite(mase_b)
-            and np.isfinite(mase_a)
-            and mase_b > inner_ratio_threshold * mase_a
-        ):
+        if np.isfinite(mase_b) and np.isfinite(mase_a) and mase_b > inner_ratio_threshold * mase_a:
             samples = forecast(
-                y_hist, horizon, freq,
-                n_samples=n_samples, seed=seed,
+                y_hist,
+                horizon,
+                freq,
+                n_samples=n_samples,
+                seed=seed,
             )
             return samples, "vanilla"
 
     # Step 3: Apply outer route
     if outer_route == "full" or X_hist_filt is None:
         samples = forecast(
-            y_hist, horizon, freq,
-            n_samples=n_samples, seed=seed,
-            X_hist=X_hist_full, X_future=X_future_full,
+            y_hist,
+            horizon,
+            freq,
+            n_samples=n_samples,
+            seed=seed,
+            X_hist=X_hist_full,
+            X_future=X_future_full,
         )
         return samples, "full"
     else:
         samples = forecast(
-            y_hist, horizon, freq,
-            n_samples=n_samples, seed=seed,
-            X_hist=X_hist_filt, X_future=X_future_filt,
+            y_hist,
+            horizon,
+            freq,
+            n_samples=n_samples,
+            seed=seed,
+            X_hist=X_hist_filt,
+            X_future=X_future_filt,
         )
         return samples, "filt"
 
@@ -392,14 +429,22 @@ def type_gated_forecast(
         samples = forecast(y_hist, horizon, freq, n_samples=n_samples, seed=seed)
     elif route == "filt" and X_hist_filt is not None:
         samples = forecast(
-            y_hist, horizon, freq,
-            n_samples=n_samples, seed=seed,
-            X_hist=X_hist_filt, X_future=X_future_filt,
+            y_hist,
+            horizon,
+            freq,
+            n_samples=n_samples,
+            seed=seed,
+            X_hist=X_hist_filt,
+            X_future=X_future_filt,
         )
     else:  # full
         samples = forecast(
-            y_hist, horizon, freq,
-            n_samples=n_samples, seed=seed,
-            X_hist=X_hist_full, X_future=X_future_full,
+            y_hist,
+            horizon,
+            freq,
+            n_samples=n_samples,
+            seed=seed,
+            X_hist=X_hist_full,
+            X_future=X_future_full,
         )
     return samples, route

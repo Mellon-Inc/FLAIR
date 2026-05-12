@@ -50,9 +50,7 @@ class TestCategoricalCols:
         assert "sku_id" not in out["numeric_cols"]
 
     def test_auto_detect_false_drops_str(self, sample_df):
-        out = auto_encode(
-            sample_df, target_col="sales", datetime_col="date", verbose=False
-        )
+        out = auto_encode(sample_df, target_col="sales", datetime_col="date", verbose=False)
         assert "region" in out["filtered_unspecified_str"]
         assert not any(c.startswith("region_") for c in out["cols"])
 
@@ -117,17 +115,13 @@ class TestLeakage:
                 "noise": rng.standard_normal(n),
             }
         )
-        out = auto_encode(
-            df, target_col="sales", datetime_col="date", verbose=False
-        )
+        out = auto_encode(df, target_col="sales", datetime_col="date", verbose=False)
         assert "near_copy" in out["leaky"]
         assert "noise" not in out["leaky"]
 
     def test_name_based_leak(self, sample_df):
         df = sample_df.assign(sales_lag=sample_df["sales"].shift(1).fillna(0))
-        out = auto_encode(
-            df, target_col="sales", datetime_col="date", verbose=False
-        )
+        out = auto_encode(df, target_col="sales", datetime_col="date", verbose=False)
         assert "sales_lag" in out["leaky"]
 
     def test_sum_identity_leak(self):
@@ -211,9 +205,7 @@ class TestFreqInference:
                 "y": np.arange(n, dtype=float),
             }
         )
-        out = auto_encode(
-            df, target_col="y", datetime_col="date", verbose=False
-        )
+        out = auto_encode(df, target_col="y", datetime_col="date", verbose=False)
         assert out["freq"] == freq_out
 
     def test_infer_freq_falls_back_to_hint(self):
@@ -316,9 +308,7 @@ class TestEdgeCases:
         n_hist = 50
         history = sample_df.iloc[:n_hist].copy()
         future_X = (
-            sample_df.iloc[n_hist : n_hist + 7]
-            .drop(columns=["sales"])
-            .assign(unexpected_col=0.0)
+            sample_df.iloc[n_hist : n_hist + 7].drop(columns=["sales"]).assign(unexpected_col=0.0)
         )
         pipe = FLAIRPipeline(
             target_col="sales",

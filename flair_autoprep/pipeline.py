@@ -171,8 +171,7 @@ class FLAIRPipeline:
 
         if len(future_X) != horizon:
             raise ValueError(
-                f"future_X has {len(future_X)} rows but horizon={horizon}; "
-                "they must match"
+                f"future_X has {len(future_X)} rows but horizon={horizon}; they must match"
             )
 
         extra_cols = set(future_X.columns) - set(history_df.columns)
@@ -238,8 +237,7 @@ class FLAIRPipeline:
         n_total = len(y_full)
         if horizon >= n_total:
             raise ValueError(
-                f"horizon={horizon} >= total rows ({n_total}). "
-                "Need at least 1 row of history."
+                f"horizon={horizon} >= total rows ({n_total}). Need at least 1 row of history."
             )
         n_hist = n_total - horizon
         y_hist = y_full[:n_hist]
@@ -250,8 +248,11 @@ class FLAIRPipeline:
 
         t = time.perf_counter()
         samples = _flair_forecast(
-            y_hist, horizon, freq,
-            n_samples=self.n_samples, seed=self.seed,
+            y_hist,
+            horizon,
+            freq,
+            n_samples=self.n_samples,
+            seed=self.seed,
             X_hist=X_hist if X_hist.size else None,
             X_future=X_future if X_future.size else None,
         )
