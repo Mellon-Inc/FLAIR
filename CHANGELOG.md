@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.1 (2026-05-12)
+
+- Repository transferred from `TakatoHonda/FLAIR` to `Mellon-Inc/FLAIR`. Old URLs continue to redirect; PyPI Project URLs and README links updated to the new canonical location.
+- Docs: add arXiv badge and BibTeX entry for the companion paper (arXiv:2605.07222).
+- Fix: silence mypy `no-any-return` errors triggered by newer numpy stubs (type-comment-only change, no runtime impact).
+
 ## 0.6.0 (2026-04-15)
 
 - **Unified BIC with P=1 null model**: period selection now evaluates a P=1 null (mean + noise, 1 parameter) alongside all periodic candidates under a single BIC formula. Periodicity is rejected when the rank-1 fit does not justify the extra Shape parameters. GIFT-Eval relMASE 0.857 → 0.838, relCRPS 0.610 → 0.587.
